@@ -1,0 +1,7 @@
+{
+  "name": "CEO Framework 2026",
+  "description": "A bespoke CRM and Management Operating System based on the CEO 2026 Framework for 3D Digital Business and Grupo VcChic.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
