@@ -161,13 +161,13 @@ const Pipeline: React.FC<PipelineProps> = ({ leads, setLeads }) => {
         </div>
       </div>
 
-      <div className="flex-1 overflow-x-auto">
-        <div className="flex gap-6 min-w-[1200px] h-full pb-4">
+      <div className="flex-1 overflow-x-auto overflow-y-hidden min-h-0" style={{maxHeight: 'calc(100vh - 200px)'}}>
+        <div className="inline-flex gap-6 h-full pb-4" style={{minWidth: 'max(100%, 1200px)'}}>
           {kanbanColumns.map(col => {
             const items = projectLeads.filter(l => l.status === col.id);
             return (
-            <div key={col.id} className="flex-1 bg-white/40 border border-slate-100 rounded-[2.5rem] flex flex-col p-4 shadow-sm">
-              <div className="p-4 mb-2 flex justify-between items-center">
+            <div key={col.id} className="bg-white/40 border border-slate-100 rounded-[2.5rem] flex flex-col p-4 shadow-sm min-h-0" style={{minWidth: '280px', flex: '1 1 0%'}}>
+              <div className="p-4 mb-2 flex justify-between items-center flex-shrink-0">
                   <h3 className={`font-black text-[10px] uppercase tracking-[0.2em] ${col.text}`}>{col.title}</h3>
                   <div className="flex items-center gap-2">
                       <span className="text-[10px] font-black text-slate-400 italic">R$ {items.reduce((acc, l) => acc + l.value, 0).toLocaleString()}</span>
@@ -176,8 +176,8 @@ const Pipeline: React.FC<PipelineProps> = ({ leads, setLeads }) => {
                       </span>
                   </div>
               </div>
-              
-              <div className="space-y-4 overflow-y-auto flex-1 custom-scrollbar px-2">
+
+              <div className="space-y-4 overflow-y-auto flex-1 min-h-0 custom-scrollbar px-2">
                 {items.map(lead => {
                     const days = getDaysInPipeline(lead.createdAt);
                     const heat = getHeatColor(days, lead.status as LeadStatus);

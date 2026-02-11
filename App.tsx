@@ -183,8 +183,8 @@ const App: React.FC = () => {
       <main className="ml-72 flex-1 relative h-full z-10">
         <div className="absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-[#F0F4F8] to-transparent z-20 pointer-events-none"></div>
 
-        <div className="h-full overflow-y-auto custom-scrollbar p-8">
-            <div className="max-w-[1440px] mx-auto min-h-full pb-20">
+        <div className="h-full overflow-auto custom-scrollbar p-8">
+            <div className="mx-auto min-h-full pb-20">
                 <AnimatePresence mode="wait">
                     <motion.div
                         key={activeTab}
