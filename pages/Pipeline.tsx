@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Lead, LeadStatus } from '../types';
 import { supabase } from '../lib/supabase';
-import { Plus, Clock, X, Save, Loader2, Sparkles, Thermometer, Zap, Check, ChevronLeft, ChevronRight, MoreVertical } from 'lucide-react';
+import { Plus, Clock, X, Save, Loader2, Sparkles, Thermometer, Zap, Check, ChevronLeft, ChevronRight, MoreVertical, Search } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface PipelineProps {
@@ -144,7 +144,17 @@ const Pipeline: React.FC<PipelineProps> = ({ leads, setLeads }) => {
           <h2 className="text-4xl font-black text-slate-900 tracking-tighter uppercase italic">CRM <span className="text-blue-600">INTEL</span></h2>
           <p className="text-slate-400 font-bold text-xs uppercase tracking-tight">Gestão Térmica de Oportunidades</p>
         </div>
-        <div className="flex gap-4">
+        <div className="flex gap-4 items-center">
+          <div className="relative">
+              <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Buscar lead..."
+                className="pl-10 pr-4 py-3 bg-white border border-slate-100 rounded-2xl text-xs font-bold outline-none focus:ring-4 focus:ring-blue-500/5 focus:border-blue-200 shadow-sm w-48 transition-all"
+              />
+          </div>
           <div className="bg-white px-6 py-3 rounded-2xl border border-slate-100 shadow-xl shadow-slate-200/50 flex items-center gap-6">
               <div className="flex flex-col">
                   <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Pipe Ativo</span>

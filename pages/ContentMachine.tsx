@@ -88,19 +88,38 @@ const ContentMachine: React.FC<ContentMachineProps> = ({ posts, setPosts }) => {
       }
   };
 
-  const PlatformButton = ({ id, label, icon: Icon, color }: { id: Platform, label: string, icon: any, color: string }) => (
-      <button 
-        onClick={() => { setActivePlatform(id); setGeneratedContent(''); }}
-        className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border transition-all font-bold ${
-            activePlatform === id 
-            ? `bg-white border-${color}-500 text-${color}-600 shadow-md ring-1 ring-${color}-100` 
-            : 'bg-slate-50 border-transparent text-slate-400 hover:bg-white hover:border-slate-200'
-        }`}
-      >
-          <Icon size={18} className={activePlatform === id ? `text-${color}-600` : ''} />
-          {label}
-      </button>
-  );
+  const platformStyles: Record<Platform, { active: string; iconActive: string }> = {
+      linkedin: {
+          active: 'bg-white border-blue-500 text-blue-600 shadow-md ring-1 ring-blue-100',
+          iconActive: 'text-blue-600'
+      },
+      instagram: {
+          active: 'bg-white border-pink-500 text-pink-600 shadow-md ring-1 ring-pink-100',
+          iconActive: 'text-pink-600'
+      },
+      newsletter: {
+          active: 'bg-white border-amber-500 text-amber-600 shadow-md ring-1 ring-amber-100',
+          iconActive: 'text-amber-600'
+      }
+  };
+
+  const PlatformButton = ({ id, label, icon: Icon }: { id: Platform, label: string, icon: any }) => {
+      const isActive = activePlatform === id;
+      const styles = platformStyles[id];
+      return (
+          <button
+            onClick={() => { setActivePlatform(id); setGeneratedContent(''); }}
+            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border transition-all font-bold ${
+                isActive
+                ? styles.active
+                : 'bg-slate-50 border-transparent text-slate-400 hover:bg-white hover:border-slate-200'
+            }`}
+          >
+              <Icon size={18} className={isActive ? styles.iconActive : ''} />
+              {label}
+          </button>
+      );
+  };
 
   // --- Social Media Preview Components ---
 
@@ -238,9 +257,9 @@ const ContentMachine: React.FC<ContentMachineProps> = ({ posts, setPosts }) => {
           <div className="col-span-12 lg:col-span-7 flex flex-col space-y-4">
               {/* Platform Selector */}
               <div className="flex gap-3">
-                  <PlatformButton id="linkedin" label="LinkedIn" icon={Linkedin} color="blue" />
-                  <PlatformButton id="instagram" label="Instagram" icon={Instagram} color="pink" />
-                  <PlatformButton id="newsletter" label="Newsletter" icon={Mail} color="amber" />
+                  <PlatformButton id="linkedin" label="LinkedIn" icon={Linkedin} />
+                  <PlatformButton id="instagram" label="Instagram" icon={Instagram} />
+                  <PlatformButton id="newsletter" label="Newsletter" icon={Mail} />
               </div>
 
               {/* Status Integration Bar */}
