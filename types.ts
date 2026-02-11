@@ -86,3 +86,56 @@ export interface Post {
     date: string;
     stats?: { likes: number; views: number };
 }
+
+// Supabase Row Types (snake_case matching DB columns)
+export interface LeadRow {
+  id: string;
+  name: string;
+  email: string;
+  source: string;
+  status: string;
+  value: number;
+  product: string;
+  created_at: string;
+}
+
+export interface TaskRow {
+  id: string;
+  title: string;
+  type: 'Big Rock' | 'Medium' | 'Small';
+  completed: boolean;
+  category: string;
+  created_at: string;
+}
+
+export interface EventRow {
+  id: string;
+  title: string;
+  start_time: string;
+  end_time: string;
+  type: string;
+  attendees?: string[];
+  day_offset: number;
+}
+
+export interface CallLogRow {
+  id: string;
+  lead_name: string;
+  date: string;
+  duration: string;
+  type: string;
+  status: string;
+  sentiment: string;
+  transcript_snippet: string;
+  summary?: string;
+  created_at: string;
+}
+
+export interface OKRRow {
+  id: string;
+  unit: string;
+  objective: string;
+  progress: number;
+  key_results: { text: string; completed: boolean }[];
+  created_at: string;
+}

@@ -2,6 +2,7 @@
 import React, { useState, useRef } from 'react';
 import { BookOpen, Play, FileText, BrainCircuit, Clock, ChevronRight, Bookmark, X, Loader2, Sparkles, GraduationCap, ArrowRight, Search, UploadCloud } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
+import { AI_MODELS } from '../constants';
 
 interface Resource {
     id: string;
@@ -116,7 +117,7 @@ const KnowledgeHub: React.FC = () => {
         setIsLoading(true);
 
         try {
-            if (!process.env.API_KEY) {
+            if (!process.env.GEMINI_API_KEY) {
                 await new Promise(r => setTimeout(r, 2000));
                 setAiLesson(`### 🔑 Conceito Central
 Esta metodologia envolve a compreensão profunda dos fundamentos de **${resource.title}**, focando na aplicação prática para alavancagem de resultados imediatos.
@@ -129,7 +130,7 @@ Utilize este conhecimento para otimizar processos na VcChic ou na Escola 3D, bus
 * Agendar uma sessão de brainstorming com o time.
 * Implementar um teste piloto (MVP) na próxima semana.`);
             } else {
-                const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+                const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
                 
                 let prompt = `Atue como um Mentor Executivo de Elite.
                 
@@ -177,7 +178,7 @@ Utilize este conhecimento para otimizar processos na VcChic ou na Escola 3D, bus
                 }
 
                 const result = await ai.models.generateContent({
-                    model: 'gemini-3-flash-preview',
+                    model: AI_MODELS.FLASH,
                     contents: {
                         role: 'user',
                         parts: parts

@@ -2,6 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { GoogleGenAI } from "@google/genai";
 import { Sparkles, Loader2, Send, Bot, User, ArrowUp, Zap, ExternalLink, TrendingUp, X, FileText, Image as ImageIcon, UploadCloud, Copy, Download, Check } from 'lucide-react';
+import { AI_MODELS } from '../constants';
 
 interface Source {
     title: string;
@@ -129,11 +130,11 @@ const AIAdvisor: React.FC = () => {
         let aiText = "";
         let sources: Source[] = [];
 
-        if (!process.env.API_KEY) {
+        if (!process.env.GEMINI_API_KEY) {
              await new Promise(r => setTimeout(r, 2000));
              aiText = "Simulação (Sem API Key): \n\n### 📄 Resumo do Documento\n**Tipo:** Relatório Financeiro (Simulado)\n\n**Pontos Chave:**\n* A margem bruta subiu para 48%.\n* O custo de aquisição (CAC) está alto no canal Facebook.\n\n**Ação Recomendada:** Revisar criativos do Ads.";
         } else {
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+            const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
             
             const history = messages.map(m => `${m.role === 'user' ? 'Carlos' : 'Advisor'}: ${m.content}`).join('\n');
             
@@ -170,7 +171,7 @@ const AIAdvisor: React.FC = () => {
             }
 
             const result = await ai.models.generateContent({
-                model: 'gemini-3-flash-preview',
+                model: AI_MODELS.FLASH,
                 contents: {
                     role: 'user',
                     parts: parts

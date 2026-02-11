@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Lead, LeadStatus } from '../types';
 import { supabase } from '../lib/supabase';
-import { Plus, Clock, X, Save, Loader2, Sparkles, Thermometer, Zap, Check, ChevronLeft, ChevronRight, MoreVertical, Search } from 'lucide-react';
+import { Plus, Clock, X, Save, Loader2, Sparkles, Thermometer, Zap, Check, ChevronLeft, ChevronRight, MoreVertical } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface PipelineProps {
@@ -39,6 +39,7 @@ const Pipeline: React.FC<PipelineProps> = ({ leads, setLeads }) => {
     .filter(l => l.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
   const handleUpdateStatus = async (leadId: string, newStatus: LeadStatus) => {
+      // Otimista: Atualiza localmente primeiro para velocidade
       const originalLeads = [...leads];
       setLeads(prev => prev.map(l => l.id === leadId ? { ...l, status: newStatus } : l));
 
@@ -47,12 +48,12 @@ const Pipeline: React.FC<PipelineProps> = ({ leads, setLeads }) => {
               .from('leads')
               .update({ status: newStatus })
               .eq('id', leadId);
-
+          
           if (error) throw error;
           window.dispatchEvent(new CustomEvent('nexus-data-updated'));
       } catch (e) {
           setLeads(originalLeads);
-          alert("Erro ao mover lead. Sincronização falhou.");
+          alert("Erro ao mover lead no pipeline. Verifique sua conexão com o Supabase.");
       }
   };
 
@@ -61,21 +62,21 @@ const Pipeline: React.FC<PipelineProps> = ({ leads, setLeads }) => {
       setIsSaving(true);
       try {
           const { error } = await supabase.from('leads').insert({
-              name: newLead.name, email: newLead.email, product: newLead.product,
-              source: newLead.source, value: newLead.value, status: newLead.status,
+              name: newLead.name, email: newLead.email, product: newLead.product, 
+              source: newLead.source, value: newLead.value, status: newLead.status, 
               created_at: new Date().toISOString()
           });
           if (error) throw error;
           setIsModalOpen(false);
           setNewLead({ name: '', email: '', product: 'Nexus', source: 'Organic', value: 0, status: LeadStatus.NEW });
           window.dispatchEvent(new CustomEvent('nexus-data-updated'));
-      } catch (err) { alert("Erro ao salvar."); } finally { setIsSaving(false); }
+      } catch (err) { alert("Erro ao salvar lead. Verifique os dados e sua conexão."); } finally { setIsSaving(false); }
   };
 
   const handleQuickSchedule = async () => {
       if (!selectedLead) return;
       setIsSaving(true);
-
+      
       try {
           const today = new Date();
           const targetDate = new Date(scheduleData.date);
@@ -110,7 +111,7 @@ const Pipeline: React.FC<PipelineProps> = ({ leads, setLeads }) => {
           setSelectedLead(null);
           window.dispatchEvent(new CustomEvent('nexus-data-updated'));
       } catch (e) {
-          alert("Falha ao sincronizar com o ecossistema.");
+          alert("Falha ao agendar call. Verifique se a data e horário estão corretos.");
       } finally {
           setIsSaving(false);
       }
@@ -138,23 +139,13 @@ const Pipeline: React.FC<PipelineProps> = ({ leads, setLeads }) => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 h-full flex flex-col pb-10">
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-4xl font-black text-slate-900 tracking-tighter uppercase italic">CRM <span className="text-blue-600">INTEL</span></h2>
           <p className="text-slate-400 font-bold text-xs uppercase tracking-tight">Gestão Térmica de Oportunidades</p>
         </div>
-        <div className="flex gap-4 items-center">
-          <div className="relative">
-              <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Buscar lead..."
-                className="pl-10 pr-4 py-3 bg-white border border-slate-100 rounded-2xl text-xs font-bold outline-none focus:ring-4 focus:ring-blue-500/5 focus:border-blue-200 shadow-sm w-48 transition-all"
-              />
-          </div>
+        <div className="flex gap-4">
           <div className="bg-white px-6 py-3 rounded-2xl border border-slate-100 shadow-xl shadow-slate-200/50 flex items-center gap-6">
               <div className="flex flex-col">
                   <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Pipe Ativo</span>
@@ -170,13 +161,13 @@ const Pipeline: React.FC<PipelineProps> = ({ leads, setLeads }) => {
         </div>
       </div>
 
-      {/* Kanban Board - Grid 4 colunas */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', height: 'calc(100vh - 220px)' }}>
+      <div className="flex-1 overflow-x-auto">
+        <div className="flex gap-6 min-w-[1200px] h-full pb-4">
           {kanbanColumns.map(col => {
             const items = projectLeads.filter(l => l.status === col.id);
             return (
-            <div key={col.id} className="bg-white/40 border border-slate-100 rounded-[2rem] flex flex-col p-3 shadow-sm" style={{ minHeight: 0, overflow: 'hidden' }}>
-              <div className="p-4 mb-2 flex justify-between items-center" style={{ flexShrink: 0 }}>
+            <div key={col.id} className="flex-1 bg-white/40 border border-slate-100 rounded-[2.5rem] flex flex-col p-4 shadow-sm">
+              <div className="p-4 mb-2 flex justify-between items-center">
                   <h3 className={`font-black text-[10px] uppercase tracking-[0.2em] ${col.text}`}>{col.title}</h3>
                   <div className="flex items-center gap-2">
                       <span className="text-[10px] font-black text-slate-400 italic">R$ {items.reduce((acc, l) => acc + l.value, 0).toLocaleString()}</span>
@@ -185,8 +176,8 @@ const Pipeline: React.FC<PipelineProps> = ({ leads, setLeads }) => {
                       </span>
                   </div>
               </div>
-
-              <div className="space-y-4 px-2" style={{ flex: '1 1 0%', overflowY: 'auto', minHeight: 0 }}>
+              
+              <div className="space-y-4 overflow-y-auto flex-1 custom-scrollbar px-2">
                 {items.map(lead => {
                     const days = getDaysInPipeline(lead.createdAt);
                     const heat = getHeatColor(days, lead.status as LeadStatus);
@@ -195,13 +186,14 @@ const Pipeline: React.FC<PipelineProps> = ({ leads, setLeads }) => {
 
                     return (
                     <motion.div layout key={lead.id} className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/20 hover:border-blue-500 transition-all group relative">
+                        {/* Status Controls - RESTORED & IMPROVED */}
                         <div className="absolute top-4 right-4 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all translate-y-[-5px] group-hover:translate-y-0">
                              {prevSt && (
                                  <button onClick={() => handleUpdateStatus(lead.id, prevSt)} className="p-2 bg-slate-100 text-slate-400 rounded-xl hover:bg-slate-200 transition-colors" title="Voltar Status">
                                     <ChevronLeft size={14} />
                                  </button>
                              )}
-                             <button
+                             <button 
                                 onClick={(e) => { e.stopPropagation(); setSelectedLead(lead); setIsScheduleModalOpen(true); }}
                                 className="p-2 bg-blue-600 text-white rounded-xl shadow-lg hover:scale-110 transition-transform"
                                 title="Agendar Call"
@@ -229,7 +221,7 @@ const Pipeline: React.FC<PipelineProps> = ({ leads, setLeads }) => {
                                 <Thermometer size={14} />
                             </div>
                         </div>
-
+                        
                         <div className="flex justify-between items-center pt-4 border-t border-slate-50 mt-2">
                             <div className="flex items-center gap-2">
                                 <Clock size={12} className="text-slate-300" />
@@ -244,6 +236,7 @@ const Pipeline: React.FC<PipelineProps> = ({ leads, setLeads }) => {
               </div>
             </div>
           )})}
+        </div>
       </div>
 
       <AnimatePresence>

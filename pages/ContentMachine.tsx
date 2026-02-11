@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Linkedin, Instagram, Mail, Send, Sparkles, Loader2, Image as ImageIcon, Copy, CheckCircle2, TrendingUp, Users, Eye, MoreHorizontal, ThumbsUp, MessageSquare, Repeat, Heart, Bookmark, Share2 } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
 import { Platform, Post } from '../types';
+import { AI_MODELS } from '../constants';
 import { supabase } from '../lib/supabase';
 
 interface ContentMachineProps {
@@ -23,7 +24,7 @@ const ContentMachine: React.FC<ContentMachineProps> = ({ posts, setPosts }) => {
     setGeneratedContent('');
 
     try {
-        if (!process.env.API_KEY) {
+        if (!process.env.GEMINI_API_KEY) {
             await new Promise(r => setTimeout(r, 2000));
             if (activePlatform === 'linkedin') {
                 setGeneratedContent(`🚀 **O fim da renderização tradicional?**\n\nAcabei de testar uma nova técnica no Blender que reduziu meu tempo de render em 40%.\n\nO segredo não está na GPU, mas no workflow.\n\n👇 Vou explicar o passo a passo nos comentários.\n\n#3D #Blender #Produtividade`);
@@ -33,7 +34,7 @@ const ContentMachine: React.FC<ContentMachineProps> = ({ posts, setPosts }) => {
                 setGeneratedContent(`**Assunto:** O segredo que dobrei meu faturamento\n\nOlá Carlos,\n\nHoje quero ser direto. Muita gente me pergunta como escalei a agência...\n\n[Corpo do email simulado...]`);
             }
         } else {
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+            const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
             
             let systemPrompt = "";
             if (activePlatform === 'linkedin') {
@@ -45,7 +46,7 @@ const ContentMachine: React.FC<ContentMachineProps> = ({ posts, setPosts }) => {
             }
 
             const result = await ai.models.generateContent({
-                model: 'gemini-3-flash-preview',
+                model: AI_MODELS.FLASH,
                 contents: `${systemPrompt}\n\nTópico: ${topic}`
             });
             
@@ -88,38 +89,19 @@ const ContentMachine: React.FC<ContentMachineProps> = ({ posts, setPosts }) => {
       }
   };
 
-  const platformStyles: Record<Platform, { active: string; iconActive: string }> = {
-      linkedin: {
-          active: 'bg-white border-blue-500 text-blue-600 shadow-md ring-1 ring-blue-100',
-          iconActive: 'text-blue-600'
-      },
-      instagram: {
-          active: 'bg-white border-pink-500 text-pink-600 shadow-md ring-1 ring-pink-100',
-          iconActive: 'text-pink-600'
-      },
-      newsletter: {
-          active: 'bg-white border-amber-500 text-amber-600 shadow-md ring-1 ring-amber-100',
-          iconActive: 'text-amber-600'
-      }
-  };
-
-  const PlatformButton = ({ id, label, icon: Icon }: { id: Platform, label: string, icon: any }) => {
-      const isActive = activePlatform === id;
-      const styles = platformStyles[id];
-      return (
-          <button
-            onClick={() => { setActivePlatform(id); setGeneratedContent(''); }}
-            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border transition-all font-bold ${
-                isActive
-                ? styles.active
-                : 'bg-slate-50 border-transparent text-slate-400 hover:bg-white hover:border-slate-200'
-            }`}
-          >
-              <Icon size={18} className={isActive ? styles.iconActive : ''} />
-              {label}
-          </button>
-      );
-  };
+  const PlatformButton = ({ id, label, icon: Icon, color }: { id: Platform, label: string, icon: any, color: string }) => (
+      <button 
+        onClick={() => { setActivePlatform(id); setGeneratedContent(''); }}
+        className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border transition-all font-bold ${
+            activePlatform === id 
+            ? `bg-white border-${color}-500 text-${color}-600 shadow-md ring-1 ring-${color}-100` 
+            : 'bg-slate-50 border-transparent text-slate-400 hover:bg-white hover:border-slate-200'
+        }`}
+      >
+          <Icon size={18} className={activePlatform === id ? `text-${color}-600` : ''} />
+          {label}
+      </button>
+  );
 
   // --- Social Media Preview Components ---
 
@@ -257,9 +239,9 @@ const ContentMachine: React.FC<ContentMachineProps> = ({ posts, setPosts }) => {
           <div className="col-span-12 lg:col-span-7 flex flex-col space-y-4">
               {/* Platform Selector */}
               <div className="flex gap-3">
-                  <PlatformButton id="linkedin" label="LinkedIn" icon={Linkedin} />
-                  <PlatformButton id="instagram" label="Instagram" icon={Instagram} />
-                  <PlatformButton id="newsletter" label="Newsletter" icon={Mail} />
+                  <PlatformButton id="linkedin" label="LinkedIn" icon={Linkedin} color="blue" />
+                  <PlatformButton id="instagram" label="Instagram" icon={Instagram} color="pink" />
+                  <PlatformButton id="newsletter" label="Newsletter" icon={Mail} color="amber" />
               </div>
 
               {/* Status Integration Bar */}

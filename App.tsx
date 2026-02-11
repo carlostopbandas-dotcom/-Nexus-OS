@@ -13,7 +13,7 @@ import Calls from './pages/Calls';
 import ContentMachine from './pages/ContentMachine';
 import KnowledgeHub from './pages/KnowledgeHub';
 import VoiceAssistant from './components/VoiceAssistant';
-import { CallLog, Task, Lead, CalendarEvent, OKR, Post } from './types';
+import { CallLog, Task, Lead, CalendarEvent, OKR, Post, LeadRow, TaskRow, EventRow, CallLogRow, OKRRow } from './types';
 import { Loader2 } from 'lucide-react';
 
 // Tipagem para métricas de loja
@@ -57,58 +57,58 @@ const App: React.FC = () => {
       ]);
 
       if (leadsRes.data) {
-        setLeads(leadsRes.data.map((l: any) => ({
+        setLeads(leadsRes.data.map((l: LeadRow) => ({
           id: l.id,
           name: l.name,
           email: l.email,
-          source: l.source,
-          status: l.status,
+          source: l.source as Lead['source'],
+          status: l.status as Lead['status'],
           value: l.value,
-          product: l.product,
+          product: l.product as Lead['product'],
           createdAt: l.created_at
         })));
       }
-      
+
       if (tasksRes.data) {
-        setTasks(tasksRes.data.map((t: any) => ({
+        setTasks(tasksRes.data.map((t: TaskRow) => ({
           id: t.id,
           title: t.title,
           type: t.type,
           completed: t.completed,
-          category: t.category
+          category: t.category as Task['category']
         })));
       }
-      
+
       if (eventsRes.data) {
-        setEvents(eventsRes.data.map((e: any) => ({
+        setEvents(eventsRes.data.map((e: EventRow) => ({
           id: e.id,
           title: e.title,
           start: e.start_time,
           end: e.end_time,
-          type: e.type,
+          type: e.type as CalendarEvent['type'],
           attendees: e.attendees,
           dayOffset: e.day_offset
         })));
       }
 
       if (callsRes.data) {
-         setCallLogs(callsRes.data.map((c: any) => ({
+         setCallLogs(callsRes.data.map((c: CallLogRow) => ({
            id: c.id,
            leadName: c.lead_name,
            date: c.date,
            duration: c.duration,
-           type: c.type,
-           status: c.status,
-           sentiment: c.sentiment,
+           type: c.type as CallLog['type'],
+           status: c.status as CallLog['status'],
+           sentiment: c.sentiment as CallLog['sentiment'],
            transcriptSnippet: c.transcript_snippet,
            summary: c.summary
          })));
       }
 
       if (okrsRes.data) {
-          setOkrs(okrsRes.data.map((o: any) => ({
+          setOkrs(okrsRes.data.map((o: OKRRow) => ({
               id: o.id,
-              unit: o.unit,
+              unit: o.unit as OKR['unit'],
               objective: o.objective,
               progress: o.progress,
               keyResults: o.key_results

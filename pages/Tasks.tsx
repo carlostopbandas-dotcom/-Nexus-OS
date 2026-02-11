@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase';
 import { CheckSquare, Plus, Trash2, Sparkles, Loader2, Trophy, ArrowUp, ArrowDown, Briefcase, ShoppingBag, User, Store, Youtube, BarChart3, Target, MousePointer2, AlertTriangle } from 'lucide-react';
 import { GoogleGenAI, Type } from "@google/genai";
 import { motion, AnimatePresence } from 'framer-motion';
+import { AI_MODELS } from '../constants';
 
 interface TaskCardProps {
     task: Task;
@@ -89,70 +90,6 @@ const Tasks: React.FC<TasksProps> = ({ tasks, setTasks }) => {
   const Mediums = tasks.filter(t => t.type === 'Medium' && !t.completed);
   const Smalls = tasks.filter(t => t.type === 'Small' && !t.completed);
 
-  const handleRebalance = async () => {
-      const incompleteTasks = tasks.filter(t => !t.completed);
-      if (incompleteTasks.length === 0) return;
-      setIsReorganizing(true);
-
-      try {
-          const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
-          const taskList = incompleteTasks.map(t => `ID: ${t.id} | Título: "${t.title}" | Tipo Atual: ${t.type} | Categoria: ${t.category}`).join('\n');
-
-          const prompt = `Você é o Advisor de Produtividade do Carlos (CEO).
-          Regra 1-3-5: Máximo 1 Big Rock, 3 Mediums, 5 Smalls.
-
-          CRITÉRIOS DE CLASSIFICAÇÃO:
-          - Big Rock: APENAS a tarefa que gera MAIS CAIXA ou ESCALA imediata HOJE.
-          - Medium: Tarefas de gestão ou execução técnica importante.
-          - Small: Manutenção, e-mails, rotina, saúde.
-
-          TAREFAS ATUAIS:
-          ${taskList}
-
-          Reclassifique as tarefas respeitando RIGOROSAMENTE os limites (1-3-5).
-          Retorne APENAS um JSON array com objetos { "id": "...", "type": "Big Rock" | "Medium" | "Small" }.`;
-
-          const result = await ai.models.generateContent({
-              model: 'gemini-3-flash-preview',
-              contents: prompt,
-              config: {
-                  responseMimeType: 'application/json',
-                  responseSchema: {
-                      type: Type.ARRAY,
-                      items: {
-                          type: Type.OBJECT,
-                          properties: {
-                              id: { type: Type.STRING },
-                              type: { type: Type.STRING, enum: ['Big Rock', 'Medium', 'Small'] }
-                          },
-                          required: ['id', 'type']
-                      }
-                  }
-              }
-          });
-
-          const rebalanced: { id: string; type: string }[] = JSON.parse(result.text || '[]');
-
-          const updatedTasks = tasks.map(t => {
-              const match = rebalanced.find(r => r.id === t.id);
-              return match ? { ...t, type: match.type as Task['type'] } : t;
-          });
-
-          setTasks(updatedTasks);
-
-          for (const item of rebalanced) {
-              await supabase.from('tasks').update({ type: item.type }).eq('id', item.id);
-          }
-
-          window.dispatchEvent(new CustomEvent('nexus-data-updated'));
-      } catch (error) {
-          console.error("Erro ao rebalancear:", error);
-      } finally {
-          setIsReorganizing(false);
-      }
-  };
-
   const QUICK_SUGGESTIONS = [
       { label: 'Gravar p/ YouTube (Mapa)', icon: <Youtube size={12} />, unit: '3D Digital' },
       { label: 'Review de Ads (Mivave)', icon: <BarChart3 size={12} />, unit: 'Mivave' },
@@ -166,7 +103,7 @@ const Tasks: React.FC<TasksProps> = ({ tasks, setTasks }) => {
       setIsClassifying(true);
 
       try {
-          const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+          const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
           
           const prompt = `Você é o Advisor de Produtividade do Carlos (CEO).
           O Carlos usa a Regra 1-3-5:
@@ -189,7 +126,7 @@ const Tasks: React.FC<TasksProps> = ({ tasks, setTasks }) => {
           Retorne apenas JSON.`;
 
           const result = await ai.models.generateContent({
-              model: 'gemini-3-flash-preview',
+              model: AI_MODELS.FLASH,
               contents: prompt,
               config: {
                   responseMimeType: 'application/json',
@@ -293,13 +230,11 @@ const Tasks: React.FC<TasksProps> = ({ tasks, setTasks }) => {
           </div>
         </div>
         
-        <button
-            onClick={handleRebalance}
+        <button 
             disabled={isReorganizing}
-            className="group flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-slate-200 text-slate-500 hover:text-blue-600 hover:border-blue-200 transition-all font-bold text-xs disabled:opacity-50"
+            className="group flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-slate-200 text-slate-500 hover:text-blue-600 hover:border-blue-200 transition-all font-bold text-xs"
         >
-            {isReorganizing ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} className="group-hover:animate-pulse" />}
-            {isReorganizing ? 'Rebalanceando...' : 'IA Balancear Slots'}
+            <Sparkles size={14} className="group-hover:animate-pulse" /> IA Balancear Slots
         </button>
       </div>
 

@@ -131,7 +131,7 @@ const Dashboard: React.FC<DashboardProps> = ({ tasks, leads, events, setActiveTa
           setSaveSuccess(true);
           window.dispatchEvent(new CustomEvent('nexus-data-updated'));
           setTimeout(() => setSaveSuccess(false), 3000);
-      } catch (e) { alert("Erro ao sincronizar."); } finally { setIsSavingMetric(false); }
+      } catch (e) { alert("Erro ao salvar métricas da loja. Verifique sua conexão e tente novamente."); } finally { setIsSavingMetric(false); }
   };
 
   return (

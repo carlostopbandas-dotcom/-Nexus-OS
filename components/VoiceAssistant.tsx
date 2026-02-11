@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Mic, MicOff, X, Zap, Loader2, Volume2 } from 'lucide-react';
 import { GoogleGenAI, LiveServerMessage, Modality, Type, FunctionDeclaration } from "@google/genai";
 import { CallLog } from '../types';
+import { AI_MODELS } from '../constants';
 
 interface VoiceAssistantProps {
   onAddCallLog: (log: CallLog) => void;
@@ -69,7 +70,7 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onAddCallLog }) => {
   };
 
   const connectToGemini = async () => {
-    if (!process.env.API_KEY) {
+    if (!process.env.GEMINI_API_KEY) {
         alert("API Key necessária para o Nexus Voice.");
         return;
     }
@@ -77,7 +78,7 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onAddCallLog }) => {
     setIsConnecting(true);
     
     try {
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+        const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
         
         // Setup Audio Contexts
         // Note: Using standard sample rate for output to match system usually works best, but 24000 is common for Gemini output.
@@ -93,7 +94,7 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onAddCallLog }) => {
         
         // Connect Session
         const sessionPromise = ai.live.connect({
-            model: 'gemini-2.5-flash-native-audio-preview-12-2025',
+            model: AI_MODELS.VOICE,
             config: {
                 responseModalities: [Modality.AUDIO],
                 speechConfig: {

@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { DAILY_ROUTINE } from '../constants';
-import { CalendarEvent, ScheduleBlock, Task } from '../types';
+import { CalendarEvent, ScheduleBlock, Task, EventRow } from '../types';
 import { supabase } from '../lib/supabase';
 import { Clock, User, Phone, Megaphone, Sparkles, Calendar as CalendarIcon, Zap, AlertCircle, Trash2, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -49,12 +49,12 @@ const Routine: React.FC<RoutineProps> = ({ events, setEvents, tasks = [] }) => {
   const fetchEvents = useCallback(async () => {
     const { data } = await supabase.from('events').select('*').order('start_time', { ascending: true });
     if (data) {
-        setEvents(data.map((e: any) => ({
+        setEvents(data.map((e: EventRow) => ({
             id: e.id,
             title: e.title,
             start: e.start_time,
             end: e.end_time,
-            type: e.type as any,
+            type: e.type as CalendarEvent['type'],
             attendees: e.attendees,
             dayOffset: e.day_offset
         })));
@@ -86,7 +86,7 @@ const Routine: React.FC<RoutineProps> = ({ events, setEvents, tasks = [] }) => {
       } catch (e) {
           console.error("Erro ao deletar:", e);
           setEvents(previousEvents);
-          alert("Erro ao remover compromisso.");
+          alert("Erro ao remover compromisso da agenda. A ação foi revertida.");
       } finally {
           setDeletingId(null);
       }
