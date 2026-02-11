@@ -39,7 +39,6 @@ const Pipeline: React.FC<PipelineProps> = ({ leads, setLeads }) => {
     .filter(l => l.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
   const handleUpdateStatus = async (leadId: string, newStatus: LeadStatus) => {
-      // Otimista: Atualiza localmente primeiro para velocidade
       const originalLeads = [...leads];
       setLeads(prev => prev.map(l => l.id === leadId ? { ...l, status: newStatus } : l));
 
@@ -48,7 +47,7 @@ const Pipeline: React.FC<PipelineProps> = ({ leads, setLeads }) => {
               .from('leads')
               .update({ status: newStatus })
               .eq('id', leadId);
-          
+
           if (error) throw error;
           window.dispatchEvent(new CustomEvent('nexus-data-updated'));
       } catch (e) {
@@ -62,8 +61,8 @@ const Pipeline: React.FC<PipelineProps> = ({ leads, setLeads }) => {
       setIsSaving(true);
       try {
           const { error } = await supabase.from('leads').insert({
-              name: newLead.name, email: newLead.email, product: newLead.product, 
-              source: newLead.source, value: newLead.value, status: newLead.status, 
+              name: newLead.name, email: newLead.email, product: newLead.product,
+              source: newLead.source, value: newLead.value, status: newLead.status,
               created_at: new Date().toISOString()
           });
           if (error) throw error;
@@ -76,7 +75,7 @@ const Pipeline: React.FC<PipelineProps> = ({ leads, setLeads }) => {
   const handleQuickSchedule = async () => {
       if (!selectedLead) return;
       setIsSaving(true);
-      
+
       try {
           const today = new Date();
           const targetDate = new Date(scheduleData.date);
@@ -139,7 +138,7 @@ const Pipeline: React.FC<PipelineProps> = ({ leads, setLeads }) => {
   };
 
   return (
-    <div className="space-y-8 h-full flex flex-col pb-10">
+    <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-4xl font-black text-slate-900 tracking-tighter uppercase italic">CRM <span className="text-blue-600">INTEL</span></h2>
@@ -161,13 +160,13 @@ const Pipeline: React.FC<PipelineProps> = ({ leads, setLeads }) => {
         </div>
       </div>
 
-      <div className="flex-1 overflow-x-auto overflow-y-hidden min-h-0" style={{maxHeight: 'calc(100vh - 200px)'}}>
-        <div className="inline-flex gap-6 h-full pb-4" style={{minWidth: 'max(100%, 1200px)'}}>
+      {/* Kanban Board - Grid 4 colunas */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', height: 'calc(100vh - 220px)' }}>
           {kanbanColumns.map(col => {
             const items = projectLeads.filter(l => l.status === col.id);
             return (
-            <div key={col.id} className="bg-white/40 border border-slate-100 rounded-[2.5rem] flex flex-col p-4 shadow-sm min-h-0" style={{minWidth: '280px', flex: '1 1 0%'}}>
-              <div className="p-4 mb-2 flex justify-between items-center flex-shrink-0">
+            <div key={col.id} className="bg-white/40 border border-slate-100 rounded-[2rem] flex flex-col p-3 shadow-sm" style={{ minHeight: 0, overflow: 'hidden' }}>
+              <div className="p-4 mb-2 flex justify-between items-center" style={{ flexShrink: 0 }}>
                   <h3 className={`font-black text-[10px] uppercase tracking-[0.2em] ${col.text}`}>{col.title}</h3>
                   <div className="flex items-center gap-2">
                       <span className="text-[10px] font-black text-slate-400 italic">R$ {items.reduce((acc, l) => acc + l.value, 0).toLocaleString()}</span>
@@ -177,7 +176,7 @@ const Pipeline: React.FC<PipelineProps> = ({ leads, setLeads }) => {
                   </div>
               </div>
 
-              <div className="space-y-4 overflow-y-auto flex-1 min-h-0 custom-scrollbar px-2">
+              <div className="space-y-4 px-2" style={{ flex: '1 1 0%', overflowY: 'auto', minHeight: 0 }}>
                 {items.map(lead => {
                     const days = getDaysInPipeline(lead.createdAt);
                     const heat = getHeatColor(days, lead.status as LeadStatus);
@@ -186,14 +185,13 @@ const Pipeline: React.FC<PipelineProps> = ({ leads, setLeads }) => {
 
                     return (
                     <motion.div layout key={lead.id} className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/20 hover:border-blue-500 transition-all group relative">
-                        {/* Status Controls - RESTORED & IMPROVED */}
                         <div className="absolute top-4 right-4 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all translate-y-[-5px] group-hover:translate-y-0">
                              {prevSt && (
                                  <button onClick={() => handleUpdateStatus(lead.id, prevSt)} className="p-2 bg-slate-100 text-slate-400 rounded-xl hover:bg-slate-200 transition-colors" title="Voltar Status">
                                     <ChevronLeft size={14} />
                                  </button>
                              )}
-                             <button 
+                             <button
                                 onClick={(e) => { e.stopPropagation(); setSelectedLead(lead); setIsScheduleModalOpen(true); }}
                                 className="p-2 bg-blue-600 text-white rounded-xl shadow-lg hover:scale-110 transition-transform"
                                 title="Agendar Call"
@@ -221,7 +219,7 @@ const Pipeline: React.FC<PipelineProps> = ({ leads, setLeads }) => {
                                 <Thermometer size={14} />
                             </div>
                         </div>
-                        
+
                         <div className="flex justify-between items-center pt-4 border-t border-slate-50 mt-2">
                             <div className="flex items-center gap-2">
                                 <Clock size={12} className="text-slate-300" />
@@ -236,7 +234,6 @@ const Pipeline: React.FC<PipelineProps> = ({ leads, setLeads }) => {
               </div>
             </div>
           )})}
-        </div>
       </div>
 
       <AnimatePresence>
