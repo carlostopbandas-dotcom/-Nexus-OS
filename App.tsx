@@ -201,7 +201,7 @@ const App: React.FC = () => {
         </div>
       </main>
 
-      <VoiceAssistant onAddCallLog={handleAddCallLog} />
+      <VoiceAssistant onAddCallLog={handleAddCallLog} setActiveTab={setActiveTab} />
     </div>
   );
 };
