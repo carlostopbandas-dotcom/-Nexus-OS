@@ -56,7 +56,7 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onAddCallLog, setActive
   };
 
   // =============================================
-  // TOOL DECLARATIONS (8 total)
+  // TOOL DECLARATIONS (9 total)
   // =============================================
 
   const logCallTool: FunctionDeclaration = {
@@ -170,6 +170,16 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onAddCallLog, setActive
     }
   };
 
+  const analyzeCeoCockpitTool: FunctionDeclaration = {
+    name: 'analyze_ceo_cockpit',
+    description: 'Faz uma análise estratégica completa do Cockpit CEO com métricas MTD de todas as lojas, pipeline de vendas, funil 3D Digital, ROAS por loja e status operacional.',
+    parameters: {
+      type: Type.OBJECT,
+      properties: {},
+      required: []
+    }
+  };
+
   const connectToGemini = async () => {
     if (!process.env.GEMINI_API_KEY) {
         alert("API Key necessária para o Nexus Voice.");
@@ -208,11 +218,12 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onAddCallLog, setActive
                   addLeadTool,
                   scheduleEventTool,
                   getDailyBriefingTool,
-                  saveStoreMetricTool
+                  saveStoreMetricTool,
+                  analyzeCeoCockpitTool
                 ] }],
                 systemInstruction: `Você é o Nexus Voice, assistente executivo de comando de voz do Carlos no Nexus OS.
 
-Você controla TODO o sistema por voz. Suas 8 capacidades são:
+Você controla TODO o sistema por voz. Suas 9 capacidades são:
 
 1. **log_sales_call** — Registrar calls de vendas/mentoria/Mapa da Clareza. Perfis: "Resgate" (endividado → Projeto Respirar) ou "Transição" (estável → Formação 3D).
 2. **navigate_to_page** — Navegar entre as páginas: dashboard, okrs, pipeline (=CRM/leads), content (=conteúdo), knowledge (=base), calls, routine (=agenda/calendário), tasks (=sprint), ai (=conselheiro/advisor).
@@ -220,8 +231,9 @@ Você controla TODO o sistema por voz. Suas 8 capacidades são:
 4. **complete_task** — Marcar tarefa como concluída buscando pelo título.
 5. **add_lead** — Adicionar lead ao CRM com nome, produto, valor e fonte.
 6. **schedule_event** — Agendar call/reunião/sessão no calendário. Calcular a data correta (hoje, amanhã, etc).
-7. **get_daily_briefing** — Gerar resumo executivo do dia (tarefas, eventos, leads, métricas).
+7. **get_daily_briefing** — Gerar resumo executivo rápido do dia (contagens de tarefas, eventos, leads novos).
 8. **save_store_metric** — Registrar faturamento e gasto de loja, calculando ROAS automaticamente.
+9. **analyze_ceo_cockpit** — Análise estratégica COMPLETA do Cockpit CEO: faturamento MTD por loja, ROAS por loja, pipeline de vendas 3D Digital, funil de conversão, breakdown de tarefas por tipo, agenda detalhada do dia e sentimento das calls do mês.
 
 REGRAS:
 - Sempre fale português do Brasil, de forma direta e executiva.
@@ -230,9 +242,10 @@ REGRAS:
 - Quando disser "completa", "marca como feita", "finaliza" tarefa → use complete_task.
 - Quando mencionar "novo lead", "adiciona lead" → use add_lead.
 - Quando pedir para "agendar", "marcar" call/reunião → use schedule_event.
-- Quando pedir "briefing", "resumo do dia" → use get_daily_briefing.
+- Quando pedir "briefing", "resumo do dia" → use get_daily_briefing (resumo rápido).
 - Quando informar faturamento/vendas/gasto de loja → use save_store_metric.
-- Após cada ação, confirme brevemente o que foi feito.`,
+- Quando pedir "cockpit", "análise geral", "como tá o negócio", "dashboard executivo", "analisa o cockpit" → use analyze_ceo_cockpit (análise profunda).
+- Após cada ação, confirme brevemente o que foi feito. Na análise do cockpit, narre os dados de forma estruturada e estratégica.`,
             },
             callbacks: {
                 onopen: () => {
@@ -453,6 +466,85 @@ REGRAS:
                                     responseResult = { result: `Métrica registrada para ${args.store_name}: Vendas R$${sales}, Gasto R$${spend}, ROAS ${roas.toFixed(1)}x.` };
                                 }
 
+                                // ─── analyze_ceo_cockpit ───
+                                else if (fc.name === 'analyze_ceo_cockpit') {
+                                    const now = new Date();
+                                    const firstDayOfMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+                                    const todayStr = now.toISOString().split('T')[0];
+
+                                    const [metricsRes, leadsRes, tasksRes, eventsRes, callsRes] = await Promise.all([
+                                        supabase.from('store_metrics').select('*').gte('date', firstDayOfMonth),
+                                        supabase.from('leads').select('*'),
+                                        supabase.from('tasks').select('*'),
+                                        supabase.from('events').select('*').eq('day_offset', 0),
+                                        supabase.from('call_logs').select('*').gte('created_at', firstDayOfMonth)
+                                    ]);
+
+                                    const metrics = metricsRes.data || [];
+                                    const leads = leadsRes.data || [];
+                                    const tasks = tasksRes.data || [];
+                                    const todayEvents = eventsRes.data || [];
+                                    const monthCalls = callsRes.data || [];
+
+                                    // === MÉTRICAS POR LOJA (MTD) ===
+                                    const storeMap: Record<string, { sales: number; spend: number }> = {};
+                                    let totalMtdSales = 0;
+                                    let totalMtdSpend = 0;
+                                    for (const m of metrics) {
+                                        const name = m.store_name;
+                                        if (!storeMap[name]) storeMap[name] = { sales: 0, spend: 0 };
+                                        storeMap[name].sales += Number(m.sales) || 0;
+                                        storeMap[name].spend += Number(m.spend) || 0;
+                                        totalMtdSales += Number(m.sales) || 0;
+                                        totalMtdSpend += Number(m.spend) || 0;
+                                    }
+                                    const globalRoas = totalMtdSpend > 0 ? totalMtdSales / totalMtdSpend : 0;
+
+                                    const storeBreakdown = Object.entries(storeMap)
+                                        .map(([name, d]) => `${name}: Vendas R$${d.sales.toFixed(0)}, Gasto R$${d.spend.toFixed(0)}, ROAS ${d.spend > 0 ? (d.sales / d.spend).toFixed(1) : 'N/A'}x`)
+                                        .join('. ');
+
+                                    // === PIPELINE & CONVERSÃO ===
+                                    const products3D = ['Nexus', 'Mapa da Clareza', 'Formação 3D'];
+                                    const leads3D = leads.filter((l: any) => products3D.includes(l.product));
+                                    const leadsWon = leads.filter((l: any) => l.status === 'Vendido');
+                                    const leadsWon3D = leads3D.filter((l: any) => l.status === 'Vendido');
+                                    const totalPipeline = leads.reduce((s: number, l: any) => s + (Number(l.value) || 0), 0);
+                                    const pipeline3D = leads3D.reduce((s: number, l: any) => s + (Number(l.value) || 0), 0);
+                                    const revenue3D = leadsWon3D.reduce((s: number, l: any) => s + (Number(l.value) || 0), 0);
+                                    const conversionRate = leads.length > 0 ? ((leadsWon.length / leads.length) * 100).toFixed(1) : '0';
+
+                                    // === TAREFAS POR TIPO ===
+                                    const pendingTasks = tasks.filter((t: any) => !t.completed);
+                                    const bigRocks = pendingTasks.filter((t: any) => t.type === 'Big Rock');
+                                    const mediums = pendingTasks.filter((t: any) => t.type === 'Medium');
+                                    const smalls = pendingTasks.filter((t: any) => t.type === 'Small Quick Win');
+                                    const focoBigRock = bigRocks.length > 0 ? bigRocks[0].title : 'Nenhum Big Rock pendente';
+
+                                    // === EVENTOS HOJE ===
+                                    const eventsList = todayEvents
+                                        .slice(0, 5)
+                                        .map((e: any) => `${e.start_time} - ${e.title}`)
+                                        .join(', ');
+
+                                    // === CALLS DO MÊS ===
+                                    const positiveCount = monthCalls.filter((c: any) => c.sentiment === 'Positive').length;
+                                    const negativeCount = monthCalls.filter((c: any) => c.sentiment === 'Negative').length;
+
+                                    // === MONTAR RESPOSTA NARRATIVA ===
+                                    const narrative = [
+                                        `COCKPIT CEO — Análise completa.`,
+                                        `FINANCEIRO MTD: Faturamento total R$${totalMtdSales.toFixed(0)}, Gasto total R$${totalMtdSpend.toFixed(0)}, ROAS global ${globalRoas.toFixed(1)}x.`,
+                                        storeBreakdown ? `POR LOJA: ${storeBreakdown}.` : '',
+                                        `PIPELINE: ${leads.length} leads totais, valor R$${totalPipeline.toFixed(0)}. 3D Digital: ${leads3D.length} leads, pipeline R$${pipeline3D.toFixed(0)}, faturamento fechado R$${revenue3D.toFixed(0)}. Taxa de conversão geral: ${conversionRate}%.`,
+                                        `OPERACIONAL: ${pendingTasks.length} tarefas pendentes (${bigRocks.length} Big Rock, ${mediums.length} Medium, ${smalls.length} Small). Foco do dia: ${focoBigRock}.`,
+                                        todayEvents.length > 0 ? `AGENDA HOJE: ${todayEvents.length} eventos. ${eventsList}.` : 'AGENDA: Nenhum evento hoje.',
+                                        monthCalls.length > 0 ? `CALLS DO MÊS: ${monthCalls.length} realizadas, ${positiveCount} positivas, ${negativeCount} negativas.` : ''
+                                    ].filter(Boolean).join(' ');
+
+                                    responseResult = { result: narrative };
+                                }
+
                             } catch (err: any) {
                                 console.error(`Erro no tool ${fc.name}:`, err);
                                 responseResult = { result: `Erro ao executar ${fc.name}: ${err.message || 'erro desconhecido'}.` };
@@ -616,7 +708,7 @@ REGRAS:
                      assistantStatus === 'processing' ? "Processando..." : "Aguardando"}
                 </p>
                 <p className="text-xs text-slate-400">
-                    "Abre o CRM" | "Adiciona tarefa" | "Me dá o briefing"
+                    "Abre o CRM" | "Adiciona tarefa" | "Analisa o cockpit"
                 </p>
             </div>
         </div>

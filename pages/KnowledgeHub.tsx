@@ -250,8 +250,8 @@ Utilize este conhecimento para otimizar processos na VcChic ou na Escola 3D, bus
         <div className="flex flex-col space-y-6 relative pb-10">
             {/* Header */}
             <div>
-                <h2 className="text-3xl font-bold text-slate-900 tracking-tight">Knowledge Hub</h2>
-                <p className="text-slate-500 font-medium mt-1">Sua biblioteca de evolução contínua (com Tutor IA).</p>
+                <h2 className="text-3xl font-black text-slate-900 tracking-tighter italic uppercase">KNOWLEDGE <span className="text-blue-600">HUB</span></h2>
+                <p className="text-slate-400 font-bold text-xs uppercase tracking-tight">Biblioteca de Evolução Contínua com Tutor IA</p>
             </div>
 
             {/* AI Learning Engine (Custom Input) */}

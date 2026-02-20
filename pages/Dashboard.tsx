@@ -38,6 +38,13 @@ interface DashboardProps {
     isLoading: boolean;
 }
 
+const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Bom dia';
+    if (hour < 18) return 'Boa tarde';
+    return 'Boa noite';
+};
+
 const Dashboard: React.FC<DashboardProps> = ({ tasks, leads, events, setActiveTab, storeMetrics, isLoading }) => {
   const [activeUnit, setActiveUnit] = useState<MainUnit>('Overview');
   const [isSavingMetric, setIsSavingMetric] = useState(false);
@@ -143,8 +150,8 @@ const Dashboard: React.FC<DashboardProps> = ({ tasks, leads, events, setActiveTa
              <div className="h-2 w-2 rounded-full bg-blue-600 animate-ping"></div>
              <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em]">Executive Cockpit v2.0</span>
           </div>
-          <h2 className="text-5xl font-black text-slate-900 tracking-tighter italic uppercase">Comando <span className="text-blue-600">Carlos.</span></h2>
-          <p className="text-slate-400 font-bold text-xs uppercase tracking-tight">Consolidação de Dados: 3D Digital & VcChic</p>
+          <h2 className="text-5xl font-black text-slate-900 tracking-tighter italic uppercase">{getGreeting()}, <span className="text-blue-600">Carlos.</span></h2>
+          <p className="text-slate-400 font-bold text-xs uppercase tracking-tight">{new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })} — Consolidação: 3D Digital & VcChic</p>
         </div>
 
         <div className="flex items-center gap-4">
@@ -246,18 +253,38 @@ const Dashboard: React.FC<DashboardProps> = ({ tasks, leads, events, setActiveTa
                     </div>
                 </div>
                 <div className="lg:col-span-4 bg-slate-900 rounded-[2.5rem] p-8 text-white shadow-2xl relative overflow-hidden">
-                    <div className="flex items-center justify-between mb-8">
+                    <div className="absolute top-0 right-0 w-40 h-40 bg-blue-500/5 rounded-full blur-[60px] -mr-10 -mt-10"></div>
+                    <div className="flex items-center justify-between mb-8 relative z-10">
                         <h3 className="text-sm font-black uppercase tracking-[0.2em] flex items-center gap-3"><Bell size={18} className="text-blue-400" /> Nexus Pulse</h3>
                         <Sparkles size={16} className="text-blue-400 animate-pulse" />
                     </div>
-                    <div className="space-y-6 h-[300px] overflow-y-auto custom-scrollbar pr-2">
-                        <div className="border-l-2 border-blue-500/30 pl-4 py-1">
-                            <p className="text-[10px] font-black text-blue-400 uppercase mb-1">Agora</p>
-                            <p className="text-xs font-bold leading-relaxed text-slate-300">Sincronização Cloud finalizada: 100% integridade</p>
+                    <div className="space-y-5 h-[300px] overflow-y-auto custom-scrollbar pr-2 relative z-10">
+                        {tasks.filter(t => t.type === 'Big Rock' && !t.completed).length > 0 && (
+                            <div className="border-l-2 border-red-500/50 pl-4 py-1">
+                                <p className="text-[10px] font-black text-red-400 uppercase mb-1">Foco do Dia</p>
+                                <p className="text-xs font-bold leading-relaxed text-slate-300">{tasks.find(t => t.type === 'Big Rock' && !t.completed)?.title}</p>
+                            </div>
+                        )}
+                        {events.filter(e => e.dayOffset === 0).length > 0 && (
+                            <div className="border-l-2 border-blue-500/30 pl-4 py-1">
+                                <p className="text-[10px] font-black text-blue-400 uppercase mb-1">Agenda Hoje</p>
+                                <p className="text-xs font-bold leading-relaxed text-slate-300">{events.filter(e => e.dayOffset === 0).length} compromissos agendados</p>
+                                {events.filter(e => e.dayOffset === 0).slice(0, 2).map(ev => (
+                                    <p key={ev.id} className="text-[10px] font-bold text-slate-500 mt-1">{ev.start} — {ev.title}</p>
+                                ))}
+                            </div>
+                        )}
+                        <div className="border-l-2 border-emerald-500/30 pl-4 py-1">
+                            <p className="text-[10px] font-black text-emerald-400 uppercase mb-1">Pipeline</p>
+                            <p className="text-xs font-bold leading-relaxed text-slate-300">{leads.length} leads ativos • R$ {leads.reduce((a, l) => a + l.value, 0).toLocaleString()} em pipe</p>
+                        </div>
+                        <div className="border-l-2 border-amber-500/30 pl-4 py-1">
+                            <p className="text-[10px] font-black text-amber-400 uppercase mb-1">Tarefas</p>
+                            <p className="text-xs font-bold leading-relaxed text-slate-300">{tasks.filter(t => !t.completed).length} pendentes de {tasks.length} total</p>
                         </div>
                         <div className="border-l-2 border-slate-700 pl-4 py-1">
-                            <p className="text-[10px] font-black text-slate-500 uppercase mb-1">Histórico</p>
-                            <p className="text-xs font-bold leading-relaxed text-slate-400">{leads.length} leads capturados no período</p>
+                            <p className="text-[10px] font-black text-slate-500 uppercase mb-1">Sistema</p>
+                            <p className="text-xs font-bold leading-relaxed text-slate-400">Nexus Cloud sincronizado</p>
                         </div>
                     </div>
                 </div>

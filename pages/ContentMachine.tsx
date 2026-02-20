@@ -218,8 +218,8 @@ const ContentMachine: React.FC<ContentMachineProps> = ({ posts, setPosts }) => {
     <div className="h-full flex flex-col space-y-6">
       <div className="flex justify-between items-end">
         <div>
-          <h2 className="text-3xl font-bold text-slate-900 tracking-tight">Content Machine</h2>
-          <p className="text-slate-500 font-medium mt-1">Gestão de Marca Pessoal & Distribuição</p>
+          <h2 className="text-3xl font-black text-slate-900 tracking-tighter italic uppercase">CONTENT <span className="text-blue-600">MACHINE</span></h2>
+          <p className="text-slate-400 font-bold text-xs uppercase tracking-tight">Gestão de Marca Pessoal & Distribuição</p>
         </div>
         <div className="flex gap-4 text-sm font-medium text-slate-500">
              <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm">
