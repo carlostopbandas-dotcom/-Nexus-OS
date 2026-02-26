@@ -12,6 +12,9 @@ import AIAdvisor from './pages/AIAdvisor';
 import Calls from './pages/Calls';
 import ContentMachine from './pages/ContentMachine';
 import KnowledgeHub from './pages/KnowledgeHub';
+import ShopifyPage from './pages/Shopify';
+import VcChicPage from './pages/VcChicPage';
+import SezoPage from './pages/SezoPage';
 import VoiceAssistant from './components/VoiceAssistant';
 import { CallLog, Task, Lead, CalendarEvent, OKR, Post, LeadRow, TaskRow, EventRow, CallLogRow, OKRRow } from './types';
 import { Loader2 } from 'lucide-react';
@@ -156,8 +159,14 @@ const App: React.FC = () => {
         return <Pipeline leads={leads} setLeads={setLeads} />;
       case 'content': 
         return <ContentMachine posts={posts} setPosts={setPosts} />;
-      case 'knowledge': 
+      case 'knowledge':
         return <KnowledgeHub />;
+      case 'vcchic':
+        return <VcChicPage />;
+      case 'sezo':
+        return <SezoPage />;
+      case 'shopify':
+        return <ShopifyPage />;
       case 'calls': 
         return <Calls callLogs={callLogs} setCallLogs={setCallLogs} leads={leads} />;
       case 'routine': 

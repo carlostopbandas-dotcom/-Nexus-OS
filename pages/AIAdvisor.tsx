@@ -135,21 +135,21 @@ const AIAdvisor: React.FC = () => {
              aiText = "Simulação (Sem API Key): \n\n### 📄 Resumo do Documento\n**Tipo:** Relatório Financeiro (Simulado)\n\n**Pontos Chave:**\n* A margem bruta subiu para 48%.\n* O custo de aquisição (CAC) está alto no canal Facebook.\n\n**Ação Recomendada:** Revisar criativos do Ads.";
         } else {
             const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-            
+
             const history = messages.map(m => `${m.role === 'user' ? 'Carlos' : 'Advisor'}: ${m.content}`).join('\n');
-            
+
             // Construct Prompt
-            let promptText = `Você é um Advisor de Negócios de Elite para um CEO (Carlos). 
-            
+            let promptText = `Você é um Advisor de Negócios de Elite para um CEO (Carlos).
+
             **Contexto:**
             Carlos é CEO de Educação 3D e E-commerce de Moda (VcChic).
-            
+
             **Sua Missão:**
             ${currentAttachment ? 'O usuário enviou um documento. LEIA O ARQUIVO COMPLETAMENTE. Forneça um resumo fiel, executivo e estruturado (Bullet points). Destaque: 1) Objetivo do doc, 2) Pontos Críticos/Riscos, 3) Dados Financeiros (se houver), 4) Ações sugeridas para o CEO.' : 'Responda de forma curta, estratégica e acionável.'}
 
             Histórico da conversa:
             ${history}
-            
+
             Carlos: ${userMsg.content}`;
 
             // Handle Text Attachments directly in prompt to avoid MIME type issues
@@ -159,7 +159,7 @@ const AIAdvisor: React.FC = () => {
 
             // Prepare content parts
             const parts: any[] = [{ text: promptText }];
-            
+
             // Add Binary Attachment (PDF/Image) if exists
             if (currentAttachment && !currentAttachment.isText) {
                 parts.push({
@@ -170,45 +170,35 @@ const AIAdvisor: React.FC = () => {
                 });
             }
 
+            const contentsPayload = { role: 'user', parts };
+
             const result = await ai.models.generateContent({
                 model: AI_MODELS.FLASH,
-                contents: {
-                    role: 'user',
-                    parts: parts
-                },
-                config: {
-                    // Only use search if NO attachment (to avoid distraction when summarizing docs)
-                    tools: currentAttachment ? [] : [{ googleSearch: {} }] 
-                }
+                contents: contentsPayload
             });
-            
-            aiText = result.text || "Desculpe, não consegui processar o documento/pergunta.";
 
-            // Extract Grounding Metadata (Only if Search was used)
-            const chunks = result.candidates?.[0]?.groundingMetadata?.groundingChunks;
-            if (chunks) {
-                sources = chunks
-                    .map((c: any) => c.web)
-                    .filter((w: any) => w)
-                    .map((w: any) => ({ title: w.title, uri: w.uri }));
-            }
+            aiText = result.text ?? "Desculpe, não consegui processar o documento/pergunta.";
         }
 
-        setMessages(prev => [...prev, { 
-            id: (Date.now()+1).toString(), 
-            role: 'ai', 
-            content: aiText, 
+        setMessages(prev => [...prev, {
+            id: (Date.now()+1).toString(),
+            role: 'ai',
+            content: aiText,
             timestamp: new Date(),
             sources: sources.length > 0 ? sources : undefined
         }]);
 
     } catch (error: any) {
         console.error("AI Error:", error);
-        let errorMessage = "Erro ao processar. Tente novamente.";
+        let errorMessage = `Erro ao processar: ${error?.message || 'erro desconhecido'}`;
         if (error.message?.includes('MIME type')) {
             errorMessage = "Erro de formato: O arquivo enviado não é suportado pela IA (Use PDF, JPG, PNG ou TXT).";
         } else if (error.message?.includes('400')) {
-             errorMessage = "Erro na requisição. O arquivo pode ser muito grande.";
+             errorMessage = "Erro na requisição (400). O arquivo pode ser muito grande ou o formato não é suportado.";
+        } else if (error.message?.includes('403') || error.message?.includes('API_KEY')) {
+            errorMessage = "Erro de autenticação: verifique se a GEMINI_API_KEY está correta e com permissões ativas.";
+        } else if (error.message?.includes('429')) {
+            errorMessage = "Limite de requisições atingido. Aguarde alguns segundos e tente novamente.";
         }
         setMessages(prev => [...prev, { id: (Date.now()+1).toString(), role: 'ai', content: errorMessage, timestamp: new Date() }]);
     } finally {
@@ -242,7 +232,7 @@ const AIAdvisor: React.FC = () => {
                 <h2 className="font-bold text-slate-800 leading-tight">Advisor Estratégico</h2>
                 <div className="flex items-center gap-1.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
-                    <span className="text-xs text-slate-500 font-medium">Online • Docs & Search</span>
+                    <span className="text-xs text-slate-500 font-medium">Online • Docs & Análise</span>
                 </div>
             </div>
         </div>

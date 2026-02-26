@@ -94,6 +94,7 @@ const Pipeline: React.FC<PipelineProps> = ({ leads, setLeads }) => {
           const { error: logErr } = await supabase.from('call_logs').insert({
               lead_name: selectedLead.name,
               date: `${scheduleData.date} ${scheduleData.time}`,
+              duration: 'Agendado',
               type: scheduleData.type,
               status: 'Scheduled',
               sentiment: 'Neutral',
@@ -139,7 +140,7 @@ const Pipeline: React.FC<PipelineProps> = ({ leads, setLeads }) => {
   };
 
   return (
-    <div className="space-y-8 h-full flex flex-col pb-10">
+    <div className="space-y-8 flex flex-col pb-10">
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-4xl font-black text-slate-900 tracking-tighter uppercase italic">CRM <span className="text-blue-600">INTEL</span></h2>
@@ -161,12 +162,12 @@ const Pipeline: React.FC<PipelineProps> = ({ leads, setLeads }) => {
         </div>
       </div>
 
-      <div className="flex-1 overflow-x-auto">
-        <div className="flex gap-6 min-w-[1200px] h-full pb-4">
+      <div className="overflow-x-auto pb-2">
+        <div className="flex gap-6 min-w-[1200px] pb-4">
           {kanbanColumns.map(col => {
             const items = projectLeads.filter(l => l.status === col.id);
             return (
-            <div key={col.id} className="flex-1 bg-white/40 border border-slate-100 rounded-[2.5rem] flex flex-col p-4 shadow-sm">
+            <div key={col.id} className="flex-1 bg-white/40 border border-slate-100 rounded-[2.5rem] flex flex-col p-4 shadow-sm min-w-[260px]">
               <div className="p-4 mb-2 flex justify-between items-center">
                   <h3 className={`font-black text-[10px] uppercase tracking-[0.2em] ${col.text}`}>{col.title}</h3>
                   <div className="flex items-center gap-2">
@@ -176,8 +177,8 @@ const Pipeline: React.FC<PipelineProps> = ({ leads, setLeads }) => {
                       </span>
                   </div>
               </div>
-              
-              <div className="space-y-4 overflow-y-auto flex-1 custom-scrollbar px-2">
+
+              <div className="space-y-4 overflow-y-auto max-h-[calc(100vh-320px)] px-2 scrollbar-thin" style={{ scrollbarWidth: 'thin', scrollbarColor: '#B0B0B0 transparent' }}>
                 {items.map(lead => {
                     const days = getDaysInPipeline(lead.createdAt);
                     const heat = getHeatColor(days, lead.status as LeadStatus);

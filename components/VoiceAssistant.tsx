@@ -82,8 +82,8 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onAddCallLog, setActive
       properties: {
         page: {
           type: Type.STRING,
-          enum: ['dashboard', 'okrs', 'pipeline', 'content', 'knowledge', 'calls', 'routine', 'tasks', 'ai'],
-          description: 'Página destino. Mapeamentos: "CRM" ou "leads" = pipeline, "agenda" ou "calendário" = routine, "sprint" = tasks, "conteúdo" = content, "base de conhecimento" = knowledge, "conselheiro" ou "advisor" = ai.'
+          enum: ['dashboard', 'okrs', 'pipeline', 'content', 'knowledge', 'calls', 'routine', 'tasks', 'ai', 'vcchic', 'sezo', 'shopify'],
+          description: 'Página destino. Mapeamentos: "CRM" ou "leads" = pipeline, "agenda" ou "calendário" = routine, "sprint" = tasks, "conteúdo" = content, "base de conhecimento" = knowledge, "conselheiro" ou "advisor" = ai. Lojas: "VcChic" ou "loja vcchic" = vcchic, "Sezo" ou "loja sezo" = sezo, "Moriel" ou "loja moriel" = shopify.'
         }
       },
       required: ['page']
@@ -97,7 +97,7 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onAddCallLog, setActive
       type: Type.OBJECT,
       properties: {
         title: { type: Type.STRING, description: 'Título da tarefa.' },
-        type: { type: Type.STRING, enum: ['Big Rock', 'Medium', 'Small Quick Win'], description: 'Tipo da tarefa: "Big Rock" para grandes (1), "Medium" para médias (3), "Small Quick Win" para pequenas (5).' },
+        type: { type: Type.STRING, enum: ['Big Rock', 'Medium', 'Small'], description: 'Tipo da tarefa: "Big Rock" para grandes (1), "Medium" para médias (3), "Small" para pequenas (5).' },
         category: { type: Type.STRING, enum: ['VcChic', 'Formação 3D', 'Personal', 'Marketing', 'Operations'], description: 'Categoria da tarefa. Se não especificado, usar "Personal".' }
       },
       required: ['title', 'type']
@@ -226,7 +226,7 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onAddCallLog, setActive
 Você controla TODO o sistema por voz. Suas 9 capacidades são:
 
 1. **log_sales_call** — Registrar calls de vendas/mentoria/Mapa da Clareza. Perfis: "Resgate" (endividado → Projeto Respirar) ou "Transição" (estável → Formação 3D).
-2. **navigate_to_page** — Navegar entre as páginas: dashboard, okrs, pipeline (=CRM/leads), content (=conteúdo), knowledge (=base), calls, routine (=agenda/calendário), tasks (=sprint), ai (=conselheiro/advisor).
+2. **navigate_to_page** — Navegar entre as páginas: dashboard, okrs, pipeline (=CRM/leads), content (=conteúdo), knowledge (=base), calls, routine (=agenda/calendário), tasks (=sprint), ai (=conselheiro/advisor). Lojas do Grupo VcChic: vcchic (=VcChic Store), sezo (=Sezo Store), shopify (=Moriel Store).
 3. **add_task** — Criar tarefa no Sprint 1-3-5. Classificar como Big Rock (grande), Medium (média), Small Quick Win (pequena). Categorias: VcChic, Formação 3D, Personal, Marketing, Operations.
 4. **complete_task** — Marcar tarefa como concluída buscando pelo título.
 5. **add_lead** — Adicionar lead ao CRM com nome, produto, valor e fonte.
@@ -326,7 +326,8 @@ REGRAS:
                                     const pageNames: Record<string, string> = {
                                       dashboard: 'Dashboard', okrs: 'OKRs', pipeline: 'Pipeline CRM',
                                       content: 'Content Machine', knowledge: 'Base de Conhecimento',
-                                      calls: 'Smart Calls', routine: 'Agenda', tasks: 'Sprint 1-3-5', ai: 'AI Advisor'
+                                      calls: 'Smart Calls', routine: 'Agenda', tasks: 'Sprint 1-3-5', ai: 'AI Advisor',
+                                      vcchic: 'VcChic Store', sezo: 'Sezo Store', shopify: 'Moriel Store'
                                     };
                                     responseResult = { result: `Navegado para ${pageNames[args.page] || args.page}.` };
                                 }

@@ -85,6 +85,7 @@ const Tasks: React.FC<TasksProps> = ({ tasks, setTasks }) => {
   const [isClassifying, setIsClassifying] = useState(false);
   const [isReorganizing, setIsReorganizing] = useState(false);
   const [celebrate, setCelebrate] = useState(false);
+  const [addError, setAddError] = useState<string | null>(null);
 
   const BigRocks = tasks.filter(t => t.type === 'Big Rock' && !t.completed);
   const Mediums = tasks.filter(t => t.type === 'Medium' && !t.completed);
@@ -101,11 +102,17 @@ const Tasks: React.FC<TasksProps> = ({ tasks, setTasks }) => {
       const taskValue = directValue || newTaskInput;
       if (!taskValue.trim()) return;
       setIsClassifying(true);
+      setAddError(null);
 
+      let finalType: 'Big Rock' | 'Medium' | 'Small' = 'Small';
+      let finalCategory = 'Personal';
+
+      // Try AI classification; fall back to defaults if it fails
       try {
-          const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-          
-          const prompt = `Você é o Advisor de Produtividade do Carlos (CEO).
+          if (process.env.GEMINI_API_KEY) {
+              const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+
+              const prompt = `Você é o Advisor de Produtividade do Carlos (CEO).
           O Carlos usa a Regra 1-3-5:
           - 1 BIG ROCK: Somente tarefas que geram CAIXA ou ESCALA imediata. Se for operacional, NÃO é Big Rock.
           - 3 MEDIUM: Tarefas importantes de gestão ou execução técnica necessária.
@@ -120,46 +127,54 @@ const Tasks: React.FC<TasksProps> = ({ tasks, setTasks }) => {
 
           SUA MISSÃO: Classificar com RIGOR EXECUTIVO.
           IMPORTANTE: Se já existe 1 Big Rock, você DEVE classificar como 'Medium' ou 'Small', a menos que a nova tarefa seja VITAL para o faturamento de hoje.
-          
+
           Categorias permitidas: '3D Digital', 'VcChic', 'Mivave', 'Sezo', 'Moriel', 'Grupo VcChic', 'Personal'.
 
           Retorne apenas JSON.`;
 
-          const result = await ai.models.generateContent({
-              model: AI_MODELS.FLASH,
-              contents: prompt,
-              config: {
-                  responseMimeType: 'application/json',
-                  responseSchema: {
-                      type: Type.OBJECT,
-                      properties: {
-                          type: { type: Type.STRING, enum: ['Big Rock', 'Medium', 'Small'] },
-                          category: { type: Type.STRING }
-                      },
-                      required: ['type', 'category']
+              const result = await ai.models.generateContent({
+                  model: AI_MODELS.FLASH,
+                  contents: prompt,
+                  config: {
+                      responseMimeType: 'application/json',
+                      responseSchema: {
+                          type: Type.OBJECT,
+                          properties: {
+                              type: { type: Type.STRING, enum: ['Big Rock', 'Medium', 'Small'] },
+                              category: { type: Type.STRING }
+                          },
+                          required: ['type', 'category']
+                      }
                   }
-              }
-          });
+              });
 
-          const aiData = JSON.parse(result.text || '{}');
-          
-          // Double Check Logic: If slot is full, demote unless it's a specific instruction
-          let finalType = aiData.type || 'Small';
-          if (finalType === 'Big Rock' && BigRocks.length >= 1) {
-              finalType = 'Medium';
+              const aiData = JSON.parse(result.text || '{}');
+              finalType = aiData.type || 'Small';
+              finalCategory = aiData.category || 'Personal';
           }
+      } catch (aiError) {
+          console.warn('IA indisponível, salvando como Small/Personal:', aiError);
+      }
 
-          const { data } = await supabase.from('tasks').insert({
+      // Enforce slot rule regardless of AI result
+      if (finalType === 'Big Rock' && BigRocks.length >= 1) {
+          finalType = 'Medium';
+      }
+
+      try {
+          const { data, error } = await supabase.from('tasks').insert({
               title: taskValue,
               type: finalType,
               completed: false,
-              category: aiData.category || 'Personal'
+              category: finalCategory
           }).select().single();
 
+          if (error) throw error;
           if (data) setTasks(prev => [...prev, data]);
           setNewTaskInput('');
-      } catch (error) {
-          console.error(error);
+      } catch (dbError: any) {
+          console.error('Erro ao salvar tarefa:', dbError);
+          setAddError(dbError?.message || 'Erro ao salvar. Verifique a conexão com o banco.');
       } finally {
           setIsClassifying(false);
       }
@@ -261,6 +276,12 @@ const Tasks: React.FC<TasksProps> = ({ tasks, setTasks }) => {
                   </button>
               </div>
           </div>
+
+          {addError && (
+              <div className="flex items-center gap-2 px-4 py-2 bg-red-50 border border-red-200 rounded-xl text-xs font-bold text-red-600">
+                  <AlertTriangle size={14} /> {addError}
+              </div>
+          )}
 
           <div className="flex flex-wrap gap-2 justify-center">
               {QUICK_SUGGESTIONS.map((s, i) => (
