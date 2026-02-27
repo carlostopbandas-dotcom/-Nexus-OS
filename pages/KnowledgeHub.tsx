@@ -187,9 +187,18 @@ Utilize este conhecimento para otimizar processos na VcChic ou na Escola 3D, bus
 
                 setAiLesson(result.text || "Erro ao gerar aula.");
             }
-        } catch (e) {
+        } catch (e: any) {
             console.error(e);
-            setAiLesson("Erro na conexão com IA.");
+            const msg = e?.message || String(e);
+            if (msg.includes('403') || msg.toLowerCase().includes('api_key') || msg.toLowerCase().includes('api key')) {
+                setAiLesson('### ⚠ Erro de Autenticação\nChave de API inválida ou sem permissão. Verifique a **GEMINI_API_KEY** no arquivo `.env.local` e reinicie o servidor Vite.');
+            } else if (msg.includes('429')) {
+                setAiLesson('### ⚠ Limite Atingido\nLimite de requisições da API Gemini atingido. Aguarde alguns segundos e tente novamente.');
+            } else if (msg.includes('404') || msg.toLowerCase().includes('not found')) {
+                setAiLesson('### ⚠ Modelo Não Encontrado\nVerifique o nome do modelo Gemini configurado em `constants.ts`.');
+            } else {
+                setAiLesson(`### ⚠ Erro na Conexão com IA\n\`\`\`\n${msg}\n\`\`\``);
+            }
         } finally {
             setIsLoading(false);
         }

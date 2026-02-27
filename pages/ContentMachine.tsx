@@ -16,12 +16,14 @@ const ContentMachine: React.FC<ContentMachineProps> = ({ posts, setPosts }) => {
   const [topic, setTopic] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedContent, setGeneratedContent] = useState('');
+  const [generateError, setGenerateError] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
   const handleGenerate = async () => {
     if (!topic.trim()) return;
     setIsGenerating(true);
     setGeneratedContent('');
+    setGenerateError('');
 
     try {
         if (!process.env.GEMINI_API_KEY) {
@@ -52,9 +54,18 @@ const ContentMachine: React.FC<ContentMachineProps> = ({ posts, setPosts }) => {
             
             setGeneratedContent(result.text || "Erro ao gerar.");
         }
-    } catch (e) {
+    } catch (e: any) {
         console.error(e);
-        setGeneratedContent("Erro na geração.");
+        const msg = e?.message || String(e);
+        if (msg.includes('403') || msg.toLowerCase().includes('api_key') || msg.toLowerCase().includes('api key')) {
+            setGenerateError('Chave de API inválida ou sem permissão. Verifique a GEMINI_API_KEY no .env.local.');
+        } else if (msg.includes('429')) {
+            setGenerateError('Limite de requisições atingido. Aguarde alguns segundos e tente novamente.');
+        } else if (msg.includes('404') || msg.toLowerCase().includes('not found')) {
+            setGenerateError('Modelo não encontrado. Verifique o nome do modelo Gemini configurado.');
+        } else {
+            setGenerateError(`Erro na geração: ${msg}`);
+        }
     } finally {
         setIsGenerating(false);
     }
@@ -110,7 +121,7 @@ const ContentMachine: React.FC<ContentMachineProps> = ({ posts, setPosts }) => {
           <div className="p-4 border-b border-slate-100 flex gap-3">
               <div className="w-12 h-12 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 font-bold">CS</div>
               <div>
-                  <h4 className="font-bold text-slate-900 leading-tight">Carlos Silva</h4>
+                  <h4 className="font-bold text-slate-900 leading-tight">Carlos Eduardo</h4>
                   <p className="text-xs text-slate-500">CEO Founder @ Framework 2026 • 2h • <span className="inline-block">🌐</span></p>
               </div>
           </div>
@@ -198,7 +209,7 @@ const ContentMachine: React.FC<ContentMachineProps> = ({ posts, setPosts }) => {
                   <div className="flex items-center gap-2">
                       <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs">C</div>
                       <div>
-                          <div className="text-xs font-bold text-slate-800">Carlos Silva <span className="font-normal text-slate-500">&lt;carlos@nexus.com&gt;</span></div>
+                          <div className="text-xs font-bold text-slate-800">Carlos Eduardo <span className="font-normal text-slate-500">&lt;carlos@nexus.com&gt;</span></div>
                           <div className="text-xs text-slate-500">Para: Lista VIP</div>
                       </div>
                   </div>
@@ -270,8 +281,8 @@ const ContentMachine: React.FC<ContentMachineProps> = ({ posts, setPosts }) => {
                     className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 mb-4 h-24 resize-none"
                   />
                   
-                  <div className="flex justify-end mb-6">
-                      <button 
+                  <div className="flex justify-end mb-4">
+                      <button
                         onClick={handleGenerate}
                         disabled={isGenerating || !topic.trim()}
                         className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 shadow-lg shadow-indigo-600/20 transition-all transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -280,6 +291,13 @@ const ContentMachine: React.FC<ContentMachineProps> = ({ posts, setPosts }) => {
                           {isGenerating ? 'Criando Mágica...' : 'Gerar Draft com IA'}
                       </button>
                   </div>
+
+                  {generateError && (
+                      <div className="mb-4 bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3">
+                          <span className="text-red-500 text-lg leading-none">⚠</span>
+                          <p className="text-red-700 text-xs font-bold leading-relaxed">{generateError}</p>
+                      </div>
+                  )}
 
                   {/* Generated Output Preview Area */}
                   {generatedContent ? (

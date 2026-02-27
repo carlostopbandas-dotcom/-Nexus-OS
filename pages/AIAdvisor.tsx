@@ -30,7 +30,7 @@ interface AttachmentData {
 const AIAdvisor: React.FC = () => {
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<Message[]>([
-      { id: '0', role: 'ai', content: 'Olá, Carlos. Sou seu Advisor Estratégico. Posso analisar documentos, contratos ou relatórios. Basta anexar o arquivo (PDF, TXT ou Imagem) e pedir um resumo.', timestamp: new Date() }
+      { id: '0', role: 'ai', content: 'Olá, Carlos Eduardo. Sou seu Advisor Estratégico. Posso analisar documentos, contratos ou relatórios. Basta anexar o arquivo (PDF, TXT ou Imagem) e pedir um resumo.', timestamp: new Date() }
   ]);
   const [loading, setLoading] = useState(false);
   const [attachment, setAttachment] = useState<AttachmentData | null>(null);
@@ -136,13 +136,13 @@ const AIAdvisor: React.FC = () => {
         } else {
             const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-            const history = messages.map(m => `${m.role === 'user' ? 'Carlos' : 'Advisor'}: ${m.content}`).join('\n');
+            const history = messages.map(m => `${m.role === 'user' ? 'Carlos Eduardo' : 'Advisor'}: ${m.content}`).join('\n');
 
             // Construct Prompt
-            let promptText = `Você é um Advisor de Negócios de Elite para um CEO (Carlos).
+            let promptText = `Você é um Advisor de Negócios de Elite para um CEO (Carlos Eduardo).
 
             **Contexto:**
-            Carlos é CEO de Educação 3D e E-commerce de Moda (VcChic).
+            Carlos Eduardo é CEO de Educação 3D e E-commerce de Moda (VcChic).
 
             **Sua Missão:**
             ${currentAttachment ? 'O usuário enviou um documento. LEIA O ARQUIVO COMPLETAMENTE. Forneça um resumo fiel, executivo e estruturado (Bullet points). Destaque: 1) Objetivo do doc, 2) Pontos Críticos/Riscos, 3) Dados Financeiros (se houver), 4) Ações sugeridas para o CEO.' : 'Responda de forma curta, estratégica e acionável.'}
@@ -150,7 +150,7 @@ const AIAdvisor: React.FC = () => {
             Histórico da conversa:
             ${history}
 
-            Carlos: ${userMsg.content}`;
+            Carlos Eduardo: ${userMsg.content}`;
 
             // Handle Text Attachments directly in prompt to avoid MIME type issues
             if (currentAttachment && currentAttachment.isText) {
@@ -237,7 +237,7 @@ const AIAdvisor: React.FC = () => {
             </div>
         </div>
         <button 
-            onClick={() => setMessages([{ id: '0', role: 'ai', content: 'Memória limpa. Qual o próximo foco, Carlos?', timestamp: new Date() }])}
+            onClick={() => setMessages([{ id: '0', role: 'ai', content: 'Memória limpa. Qual o próximo foco, Carlos Eduardo?', timestamp: new Date() }])}
             className="text-xs font-medium text-slate-400 hover:text-indigo-600 transition-colors"
         >
             Limpar Conversa
