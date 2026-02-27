@@ -142,8 +142,8 @@ const Pipeline: React.FC<PipelineProps> = ({ leads, setLeads }) => {
   };
 
   return (
-    <div className="space-y-8 flex flex-col pb-10">
-      <div className="flex justify-between items-center">
+    <div className="flex flex-col gap-5" style={{ height: 'calc(100vh - 9rem)' }}>
+      <div className="flex justify-between items-center flex-shrink-0">
         <div>
           <h2 className="text-4xl font-black text-slate-900 tracking-tighter uppercase italic">CRM <span className="text-blue-600">INTEL</span></h2>
           <p className="text-slate-400 font-bold text-xs uppercase tracking-tight">Gestão Térmica de Oportunidades</p>
@@ -164,7 +164,7 @@ const Pipeline: React.FC<PipelineProps> = ({ leads, setLeads }) => {
         </div>
       </div>
 
-      <div className="flex items-center gap-3 bg-white border border-slate-100 rounded-2xl px-5 py-3 shadow-sm">
+      <div className="flex items-center gap-3 bg-white border border-slate-100 rounded-2xl px-5 py-3 shadow-sm flex-shrink-0">
         <Search size={16} className="text-slate-300 flex-shrink-0" />
         <input
           type="text"
@@ -180,13 +180,13 @@ const Pipeline: React.FC<PipelineProps> = ({ leads, setLeads }) => {
         )}
       </div>
 
-      <div className="overflow-x-auto pb-2">
-        <div className="flex gap-6 min-w-[1200px] pb-4">
+      <div className="flex-1 overflow-x-auto min-h-0">
+        <div className="flex gap-6 min-w-[1200px] h-full pb-2">
           {kanbanColumns.map(col => {
             const items = projectLeads.filter(l => l.status === col.id);
             return (
-            <div key={col.id} className="flex-1 bg-white/40 border border-slate-100 rounded-[2.5rem] flex flex-col p-4 shadow-sm min-w-[260px]">
-              <div className="p-4 mb-2 flex justify-between items-center">
+            <div key={col.id} className="flex-1 bg-white/40 border border-slate-100 rounded-[2.5rem] flex flex-col p-4 shadow-sm min-w-[260px] min-h-0">
+              <div className="p-4 mb-2 flex justify-between items-center flex-shrink-0">
                   <h3 className={`font-black text-[10px] uppercase tracking-[0.2em] ${col.text}`}>{col.title}</h3>
                   <div className="flex items-center gap-2">
                       <span className="text-[10px] font-black text-slate-400 italic">R$ {items.reduce((acc, l) => acc + l.value, 0).toLocaleString()}</span>
@@ -196,7 +196,7 @@ const Pipeline: React.FC<PipelineProps> = ({ leads, setLeads }) => {
                   </div>
               </div>
 
-              <div className="space-y-4 overflow-y-auto max-h-[calc(100vh-320px)] px-2 scrollbar-thin" style={{ scrollbarWidth: 'thin', scrollbarColor: '#B0B0B0 transparent' }}>
+              <div className="flex-1 overflow-y-auto min-h-0 space-y-4 px-2" style={{ scrollbarWidth: 'thin', scrollbarColor: '#B0B0B0 transparent' }}>
                 {items.map(lead => {
                     const days = getDaysInPipeline(lead.createdAt);
                     const heat = getHeatColor(days, lead.status as LeadStatus);
@@ -259,6 +259,7 @@ const Pipeline: React.FC<PipelineProps> = ({ leads, setLeads }) => {
       </div>
 
       <AnimatePresence>
+
         {isModalOpen && (
             <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[110] flex items-center justify-center p-4">
                 <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} className="bg-white rounded-[3rem] shadow-[0_30px_100px_rgba(0,0,0,0.2)] w-full max-w-xl overflow-hidden border border-slate-100">
