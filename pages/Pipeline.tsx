@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Lead, LeadStatus } from '../types';
 import { supabase } from '../lib/supabase';
-import { Plus, Clock, X, Save, Loader2, Sparkles, Thermometer, Zap, Check, ChevronLeft, ChevronRight, MoreVertical } from 'lucide-react';
+import { Plus, Clock, X, Save, Loader2, Sparkles, Thermometer, Zap, Check, ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface PipelineProps {
@@ -34,9 +34,11 @@ const Pipeline: React.FC<PipelineProps> = ({ leads, setLeads }) => {
     { id: LeadStatus.WON, title: 'Vendido', text: 'text-emerald-600', bg: 'bg-emerald-50' },
   ];
 
-  const projectLeads = leads
-    .filter(l => ['Nexus', 'Mapa da Clareza', 'Formação 3D', 'Projeto Respirar'].includes(l.product))
-    .filter(l => l.name.toLowerCase().includes(searchQuery.toLowerCase()));
+  const allProjectLeads = leads.filter(l => ['Nexus', 'Mapa da Clareza', 'Formação 3D', 'Projeto Respirar'].includes(l.product));
+  const conversionRate = allProjectLeads.length > 0
+    ? ((allProjectLeads.filter(l => l.status === LeadStatus.WON).length / allProjectLeads.length) * 100).toFixed(1)
+    : '0.0';
+  const projectLeads = allProjectLeads.filter(l => l.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
   const handleUpdateStatus = async (leadId: string, newStatus: LeadStatus) => {
       // Otimista: Atualiza localmente primeiro para velocidade
@@ -155,11 +157,27 @@ const Pipeline: React.FC<PipelineProps> = ({ leads, setLeads }) => {
               <div className="w-[1px] h-6 bg-slate-100"></div>
               <div className="flex flex-col">
                   <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Taxa Conversão</span>
-                  <span className="text-sm font-black text-emerald-500">14.2%</span>
+                  <span className="text-sm font-black text-emerald-500">{conversionRate}%</span>
               </div>
           </div>
           <button onClick={() => setIsModalOpen(true)} className="flex items-center gap-3 bg-slate-900 text-white px-8 py-4 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest hover:bg-blue-600 transition-all shadow-2xl shadow-blue-500/20"><Plus size={16} /> Novo Lead</button>
         </div>
+      </div>
+
+      <div className="flex items-center gap-3 bg-white border border-slate-100 rounded-2xl px-5 py-3 shadow-sm">
+        <Search size={16} className="text-slate-300 flex-shrink-0" />
+        <input
+          type="text"
+          placeholder="Buscar lead..."
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+          className="flex-1 text-xs font-bold text-slate-700 placeholder-slate-300 outline-none bg-transparent"
+        />
+        {searchQuery && (
+          <button onClick={() => setSearchQuery('')} className="text-slate-300 hover:text-slate-600 transition-colors">
+            <X size={14} />
+          </button>
+        )}
       </div>
 
       <div className="overflow-x-auto pb-2">

@@ -177,7 +177,7 @@ const StorePage: React.FC<StorePageProps> = ({ storeName, apiEndpoint, accentCol
             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Receita Total</p>
           </div>
           <p className="text-3xl font-black text-slate-900">R$ {fmt(revenue)}</p>
-          <p className="text-[10px] font-bold text-slate-400 mt-1">Pedidos pagos no mês</p>
+          <p className="text-[10px] font-bold text-slate-400 mt-1">Todos os pedidos pagos</p>
         </div>
       </div>
 

@@ -152,10 +152,10 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   // ── Performance data — VcChic e Moriel vêm do Shopify; spend do Supabase ─
   const performanceData = useMemo<Record<string, StoreStats>>(() => {
-    const todayStr = new Date().toLocaleDateString('en-CA');
+    // String-based comparison evita bugs de fuso horário com Shopify -03:00
     const now = new Date();
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const monthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const todayStr = `${monthStr}-${String(now.getDate()).padStart(2, '0')}`;
 
     // Lojas com Shopify live (vendas automáticas)
     const liveStores = new Set(['vcchic', 'sezo', 'moriel']);
@@ -184,31 +184,31 @@ const Dashboard: React.FC<DashboardProps> = ({
       }
     });
 
-    // Shopify live: substitui vendas da VcChic com dados reais
+    // Shopify live: substitui vendas da VcChic com dados reais (string comparison)
     const vcchicPaid = vcchicOrders.filter(o => o.financial_status === 'paid');
     stores.vcchic.mtdSales = vcchicPaid
-      .filter(o => new Date(o.created_at) >= monthStart)
+      .filter(o => o.created_at.slice(0, 7) === monthStr)
       .reduce((acc, o) => acc + parseFloat(o.total_price), 0);
     stores.vcchic.todaySales = vcchicPaid
-      .filter(o => new Date(o.created_at) >= todayStart)
+      .filter(o => o.created_at.slice(0, 10) === todayStr)
       .reduce((acc, o) => acc + parseFloat(o.total_price), 0);
 
-    // Shopify live: substitui vendas da Sezo com dados reais
+    // Shopify live: substitui vendas da Sezo com dados reais (string comparison)
     const sezoPaid = sezoOrders.filter(o => o.financial_status === 'paid');
     stores.sezo.mtdSales = sezoPaid
-      .filter(o => new Date(o.created_at) >= monthStart)
+      .filter(o => o.created_at.slice(0, 7) === monthStr)
       .reduce((acc, o) => acc + parseFloat(o.total_price), 0);
     stores.sezo.todaySales = sezoPaid
-      .filter(o => new Date(o.created_at) >= todayStart)
+      .filter(o => o.created_at.slice(0, 10) === todayStr)
       .reduce((acc, o) => acc + parseFloat(o.total_price), 0);
 
-    // Shopify live: substitui as vendas da Moriel com dados reais
+    // Shopify live: substitui as vendas da Moriel com dados reais (string comparison)
     const morielPaid = morielOrders.filter(o => o.financial_status === 'paid');
     stores.moriel.mtdSales = morielPaid
-      .filter(o => new Date(o.created_at) >= monthStart)
+      .filter(o => o.created_at.slice(0, 7) === monthStr)
       .reduce((acc, o) => acc + parseFloat(o.total_price), 0);
     stores.moriel.todaySales = morielPaid
-      .filter(o => new Date(o.created_at) >= todayStart)
+      .filter(o => o.created_at.slice(0, 10) === todayStr)
       .reduce((acc, o) => acc + parseFloat(o.total_price), 0);
 
     Object.values(stores).forEach(s => {
@@ -226,16 +226,19 @@ const Dashboard: React.FC<DashboardProps> = ({
   const leads3D     = leads.filter(l => ['Nexus', 'Mapa da Clareza', 'Formação 3D'].includes(l.product));
   const revenue3D   = leads3D.filter(l => l.status === LeadStatus.WON).reduce((acc, l) => acc + l.value, 0);
   const pipeline3D  = leads3D.reduce((acc, l) => acc + l.value, 0);
+  const conversion3D = leads3D.length > 0
+    ? parseFloat(((leads3D.filter(l => l.status === LeadStatus.WON).length / leads3D.length) * 100).toFixed(1))
+    : 0;
 
   const activeStats = useMemo(() => {
     if (activeUnit === 'Overview') {
-      return { revenue: revenue3D + totalMtdSales, roas: globalMtdRoas, pipe: pipeline3D, conversion: 12.4 };
+      return { revenue: revenue3D + totalMtdSales, roas: globalMtdRoas, pipe: pipeline3D, conversion: conversion3D };
     } else if (activeUnit === '3D Digital') {
-      return { revenue: revenue3D, roas: 3.12, pipe: pipeline3D, conversion: 14.2 };
+      return { revenue: revenue3D, roas: 3.12, pipe: pipeline3D, conversion: conversion3D };
     } else {
       return { revenue: totalMtdSales, roas: globalMtdRoas, pipe: totalMtdSpend, conversion: 4.8 };
     }
-  }, [activeUnit, revenue3D, totalMtdSales, globalMtdRoas, pipeline3D, totalMtdSpend]);
+  }, [activeUnit, revenue3D, totalMtdSales, globalMtdRoas, pipeline3D, totalMtdSpend, conversion3D]);
 
   const handleSaveMetric = async () => {
     const sales = parseFloat(newMetric.sales);
@@ -258,6 +261,12 @@ const Dashboard: React.FC<DashboardProps> = ({
     } finally {
       setIsSavingMetric(false);
     }
+  };
+
+  const loadingByStore: Record<string, boolean> = {
+    vcchic: vcchicLoading,
+    sezo: sezoLoading,
+    moriel: morielLoading,
   };
 
   return (
@@ -306,7 +315,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           title={activeUnit === 'Grupo VcChic' ? 'Vendas Grupo' : 'Faturamento Bruto'}
-          value={`R$ ${activeStats.revenue.toLocaleString()}`}
+          value={`R$ ${fmt(activeStats.revenue)}`}
           change={18.4} status="good"
           secondaryValue={activeUnit === 'Overview' ? 'Consolidado' : activeUnit}
           subtext="Performance Financeira"
@@ -320,7 +329,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         />
         <StatCard
           title={activeUnit === 'Grupo VcChic' ? 'Gasto Ads Total' : 'Pipeline Ativo'}
-          value={activeUnit === 'Grupo VcChic' ? `R$ ${totalMtdSpend.toLocaleString()}` : `R$ ${activeStats.pipe.toLocaleString()}`}
+          value={activeUnit === 'Grupo VcChic' ? `R$ ${fmt(totalMtdSpend)}` : `R$ ${fmt(activeStats.pipe)}`}
           change={-2.1} status="warning"
           subtext={activeUnit === 'Grupo VcChic' ? 'Investimento Marketing' : 'Contratos em Aberto'}
         />
@@ -501,7 +510,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Receita Grupo MTD</p>
                 </div>
                 <p className="text-2xl font-black text-slate-900">R$ {fmt(totalMtdSales)}</p>
-                <p className="text-[10px] font-bold text-slate-400 mt-1">4 lojas consolidadas</p>
+                <p className="text-[10px] font-bold text-slate-400 mt-1">{Object.keys(performanceData).length} lojas consolidadas</p>
               </div>
               <div className="bg-white rounded-[2rem] p-5 border border-slate-100 shadow-lg">
                 <div className="flex items-center gap-2 mb-3">
@@ -636,7 +645,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                     <div className="flex items-center gap-6">
                       <div className="text-right">
                         <p className="text-[9px] font-black text-slate-400 uppercase mb-1">Total Mês</p>
-                        {store.isLive && morielLoading
+                        {store.isLive && loadingByStore[key]
                           ? <Loader2 size={16} className="animate-spin text-slate-300 ml-auto" />
                           : <p className="text-lg font-black text-slate-900">R$ {fmt(store.mtdSales)}</p>
                         }
