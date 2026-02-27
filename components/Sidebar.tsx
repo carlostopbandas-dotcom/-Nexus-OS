@@ -66,9 +66,9 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
       <div className="p-6">
         <div className="bg-white/5 rounded-3xl p-4 border border-white/5 hover:bg-white/10 transition-all cursor-pointer group">
           <div className="flex items-center gap-3">
-             <div className="h-10 w-10 rounded-2xl bg-blue-600 flex items-center justify-center text-white font-black text-sm shadow-xl ring-2 ring-blue-500/20">CS</div>
+             <div className="h-10 w-10 rounded-2xl bg-blue-600 flex items-center justify-center text-white font-black text-sm shadow-xl ring-2 ring-blue-500/20">CE</div>
              <div className="flex-1 min-w-0">
-                 <p className="text-xs font-black text-white truncate">Carlos Silva</p>
+                 <p className="text-xs font-black text-white truncate">Carlos Eduardo</p>
                  <p className="text-[9px] text-slate-500 font-bold uppercase tracking-tight">CEO Founder</p>
              </div>
              <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"></div>
