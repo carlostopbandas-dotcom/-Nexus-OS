@@ -3,7 +3,7 @@ import { Lead, LeadStatus, OKR, ScheduleBlock, Task, CalendarEvent, CallLog } fr
 
 // AI Model Constants
 export const AI_MODELS = {
-  FLASH: 'gemini-2.0-flash',
+  FLASH: 'gemini-2.5-flash',
   VOICE: 'gemini-2.5-flash-native-audio-preview-12-2025',
 } as const;
 

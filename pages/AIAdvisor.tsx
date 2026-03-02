@@ -190,15 +190,17 @@ const AIAdvisor: React.FC = () => {
 
     } catch (error: any) {
         console.error("AI Error:", error);
-        let errorMessage = `Erro ao processar: ${error?.message || 'erro desconhecido'}`;
-        if (error.message?.includes('MIME type')) {
+        const errMsg = error?.message ?? '';
+        const errStatus = error?.status ?? error?.statusCode ?? 0;
+        let errorMessage = `Erro ao processar: ${errMsg || 'erro desconhecido'}`;
+        if (errMsg.includes('MIME type')) {
             errorMessage = "Erro de formato: O arquivo enviado não é suportado pela IA (Use PDF, JPG, PNG ou TXT).";
-        } else if (error.message?.includes('400')) {
-             errorMessage = "Erro na requisição (400). O arquivo pode ser muito grande ou o formato não é suportado.";
-        } else if (error.message?.includes('403') || error.message?.includes('API_KEY')) {
+        } else if (errStatus === 400 || errMsg.includes('400')) {
+            errorMessage = "Erro na requisição (400). O arquivo pode ser muito grande ou o formato não é suportado.";
+        } else if (errStatus === 403 || errMsg.includes('403') || errMsg.includes('API_KEY')) {
             errorMessage = "Erro de autenticação: verifique se a GEMINI_API_KEY está correta e com permissões ativas.";
-        } else if (error.message?.includes('429')) {
-            errorMessage = "Limite de requisições atingido. Aguarde alguns segundos e tente novamente.";
+        } else if (errStatus === 429 || errMsg.includes('429') || errMsg.includes('RESOURCE_EXHAUSTED')) {
+            errorMessage = "Cota da API Gemini esgotada (limite diário atingido). Acesse o Google AI Studio → API Keys para verificar sua cota. Se necessário, aguarde a renovação às 00h UTC ou ative um plano pago.";
         }
         setMessages(prev => [...prev, { id: (Date.now()+1).toString(), role: 'ai', content: errorMessage, timestamp: new Date() }]);
     } finally {

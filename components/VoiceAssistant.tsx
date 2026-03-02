@@ -146,6 +146,22 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onAddCallLog, setActive
     }
   };
 
+  const editEventTool: FunctionDeclaration = {
+    name: 'edit_event',
+    description: 'Edita um evento já existente no calendário. Busca pelo título e altera horário, data e/ou tipo.',
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        eventTitle: { type: Type.STRING, description: 'Título ou parte do título do evento a ser editado.' },
+        newTime: { type: Type.STRING, description: 'Novo horário no formato HH:MM. Omitir se não mudar.' },
+        newDate: { type: Type.STRING, description: 'Nova data no formato YYYY-MM-DD. Omitir se não mudar.' },
+        newTitle: { type: Type.STRING, description: 'Novo título para o evento. Omitir se não mudar.' },
+        newType: { type: Type.STRING, enum: ['call', 'meeting', 'session', 'personal'], description: 'Novo tipo do evento. Omitir se não mudar.' }
+      },
+      required: ['eventTitle']
+    }
+  };
+
   const getDailyBriefingTool: FunctionDeclaration = {
     name: 'get_daily_briefing',
     description: 'Gera um briefing/resumo executivo do dia com tarefas pendentes, eventos agendados, leads ativos e métricas recentes.',
@@ -178,6 +194,16 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onAddCallLog, setActive
       properties: {},
       required: []
     }
+  };
+
+  const getLocalDateStr = () => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  };
+
+  const getLocalTimeStr = () => {
+    const now = new Date();
+    return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
   };
 
   const connectToGemini = async () => {
@@ -217,11 +243,14 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onAddCallLog, setActive
                   completeTaskTool,
                   addLeadTool,
                   scheduleEventTool,
+                  editEventTool,
                   getDailyBriefingTool,
                   saveStoreMetricTool,
                   analyzeCeoCockpitTool
                 ] }],
                 systemInstruction: `Você é o Nexus Voice, assistente executivo de comando de voz do Carlos no Nexus OS.
+
+DATA E HORA ATUAL (horário de Brasília, UTC-3): ${getLocalDateStr()} às ${getLocalTimeStr()}. Use sempre esta referência para calcular "hoje", "amanhã", "agora", horários relativos, etc. NUNCA use UTC.
 
 Você controla TODO o sistema por voz. Suas 9 capacidades são:
 
@@ -231,6 +260,7 @@ Você controla TODO o sistema por voz. Suas 9 capacidades são:
 4. **complete_task** — Marcar tarefa como concluída buscando pelo título.
 5. **add_lead** — Adicionar lead ao CRM com nome, produto, valor e fonte.
 6. **schedule_event** — Agendar call/reunião/sessão no calendário. Calcular a data correta (hoje, amanhã, etc).
+6b. **edit_event** — Editar evento já existente: alterar horário, data, título ou tipo. Busca pelo título.
 7. **get_daily_briefing** — Gerar resumo executivo rápido do dia (contagens de tarefas, eventos, leads novos).
 8. **save_store_metric** — Registrar faturamento e gasto de loja, calculando ROAS automaticamente.
 9. **analyze_ceo_cockpit** — Análise estratégica COMPLETA do Cockpit CEO: faturamento MTD por loja, ROAS por loja, pipeline de vendas 3D Digital, funil de conversão, breakdown de tarefas por tipo, agenda detalhada do dia e sentimento das calls do mês.
@@ -242,6 +272,7 @@ REGRAS:
 - Quando disser "completa", "marca como feita", "finaliza" tarefa → use complete_task.
 - Quando mencionar "novo lead", "adiciona lead" → use add_lead.
 - Quando pedir para "agendar", "marcar" call/reunião → use schedule_event.
+- Quando pedir para "mudar", "alterar", "reagendar", "editar", "atualizar" horário/data de evento → use edit_event.
 - Quando pedir "briefing", "resumo do dia" → use get_daily_briefing (resumo rápido).
 - Quando informar faturamento/vendas/gasto de loja → use save_store_metric.
 - Quando pedir "cockpit", "análise geral", "como tá o negócio", "dashboard executivo", "analisa o cockpit" → use analyze_ceo_cockpit (análise profunda).
@@ -413,9 +444,60 @@ REGRAS:
                                     responseResult = { result: `Evento "${args.title}" agendado para ${args.date} às ${args.time}.` };
                                 }
 
+                                // ─── edit_event ───
+                                else if (fc.name === 'edit_event') {
+                                    const searchTerm = args.eventTitle.toLowerCase();
+                                    const { data: allEvents } = await supabase.from('events').select('*');
+
+                                    if (!allEvents || allEvents.length === 0) {
+                                        responseResult = { result: "Nenhum evento encontrado no calendário." };
+                                    } else {
+                                        const match = allEvents.find((e: any) => e.title.toLowerCase().includes(searchTerm))
+                                          || allEvents.find((e: any) => searchTerm.includes(e.title.toLowerCase()))
+                                          || allEvents.reduce((best: any, e: any) => {
+                                              const words = searchTerm.split(' ');
+                                              const score = words.filter((w: string) => e.title.toLowerCase().includes(w)).length;
+                                              const bestScore = words.filter((w: string) => best.title.toLowerCase().includes(w)).length;
+                                              return score > bestScore ? e : best;
+                                          }, allEvents[0]);
+
+                                        const updates: Record<string, any> = {};
+
+                                        if (args.newTitle) updates.title = args.newTitle;
+                                        if (args.newType) updates.type = args.newType;
+
+                                        if (args.newTime) {
+                                            updates.start_time = args.newTime;
+                                            updates.end_time = args.newTime.replace(/^(\d{2})/, (h: string) => String(Math.min(23, parseInt(h) + 1)).padStart(2, '0'));
+                                        }
+
+                                        if (args.newDate) {
+                                            const today = new Date();
+                                            today.setHours(0, 0, 0, 0);
+                                            const targetDate = new Date(args.newDate + 'T00:00:00');
+                                            updates.day_offset = Math.round((targetDate.getTime() - today.getTime()) / (1000 * 3600 * 24));
+                                        }
+
+                                        if (Object.keys(updates).length === 0) {
+                                            responseResult = { result: "Nenhuma alteração informada para o evento." };
+                                        } else {
+                                            const { error } = await supabase.from('events').update(updates).eq('id', match.id);
+                                            if (error) throw error;
+                                            window.dispatchEvent(new CustomEvent('nexus-data-updated'));
+                                            const changes = [
+                                                args.newTitle ? `título para "${args.newTitle}"` : null,
+                                                args.newTime ? `horário para ${args.newTime}` : null,
+                                                args.newDate ? `data para ${args.newDate}` : null,
+                                                args.newType ? `tipo para ${args.newType}` : null
+                                            ].filter(Boolean).join(', ');
+                                            responseResult = { result: `Evento "${match.title}" atualizado: ${changes}.` };
+                                        }
+                                    }
+                                }
+
                                 // ─── get_daily_briefing ───
                                 else if (fc.name === 'get_daily_briefing') {
-                                    const todayStr = new Date().toISOString().split('T')[0];
+                                    const todayStr = getLocalDateStr();
 
                                     const [tasksRes, eventsRes, leadsRes, metricsRes] = await Promise.all([
                                         supabase.from('tasks').select('*').eq('completed', false),
@@ -453,7 +535,7 @@ REGRAS:
                                     const sales = Number(args.sales);
                                     const spend = Number(args.spend);
                                     const roas = spend > 0 ? sales / spend : 0;
-                                    const todayStr = new Date().toISOString().split('T')[0];
+                                    const todayStr = getLocalDateStr();
 
                                     const { error } = await supabase.from('store_metrics').insert({
                                         store_name: args.store_name,
@@ -471,7 +553,7 @@ REGRAS:
                                 else if (fc.name === 'analyze_ceo_cockpit') {
                                     const now = new Date();
                                     const firstDayOfMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
-                                    const todayStr = now.toISOString().split('T')[0];
+                                    const todayStr = getLocalDateStr();
 
                                     const [metricsRes, leadsRes, tasksRes, eventsRes, callsRes] = await Promise.all([
                                         supabase.from('store_metrics').select('*').gte('date', firstDayOfMonth),

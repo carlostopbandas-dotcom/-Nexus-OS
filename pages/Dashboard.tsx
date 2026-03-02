@@ -241,9 +241,10 @@ const Dashboard: React.FC<DashboardProps> = ({
   }, [activeUnit, revenue3D, totalMtdSales, globalMtdRoas, pipeline3D, totalMtdSpend, conversion3D]);
 
   const handleSaveMetric = async () => {
-    const sales = parseFloat(newMetric.sales);
+    const isLiveStore = ['vcchic', 'sezo', 'moriel'].includes(newMetric.store_name);
+    const sales = isLiveStore ? 0 : parseFloat(newMetric.sales);
     const spend = parseFloat(newMetric.spend);
-    if (isNaN(sales) || isNaN(spend)) return;
+    if ((!isLiveStore && isNaN(sales)) || isNaN(spend)) return;
     setIsSavingMetric(true);
     try {
       const { error } = await supabase.from('store_metrics').insert({

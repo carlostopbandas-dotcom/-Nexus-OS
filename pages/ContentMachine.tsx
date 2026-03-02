@@ -57,11 +57,12 @@ const ContentMachine: React.FC<ContentMachineProps> = ({ posts, setPosts }) => {
     } catch (e: any) {
         console.error(e);
         const msg = e?.message || String(e);
-        if (msg.includes('403') || msg.toLowerCase().includes('api_key') || msg.toLowerCase().includes('api key')) {
+        const errStatus = e?.status ?? e?.statusCode ?? 0;
+        if (errStatus === 403 || msg.includes('403') || msg.toLowerCase().includes('api_key') || msg.toLowerCase().includes('api key')) {
             setGenerateError('Chave de API inválida ou sem permissão. Verifique a GEMINI_API_KEY no .env.local.');
-        } else if (msg.includes('429')) {
-            setGenerateError('Limite de requisições atingido. Aguarde alguns segundos e tente novamente.');
-        } else if (msg.includes('404') || msg.toLowerCase().includes('not found')) {
+        } else if (errStatus === 429 || msg.includes('429') || msg.includes('RESOURCE_EXHAUSTED')) {
+            setGenerateError('Cota da API Gemini esgotada (limite diário atingido). Verifique sua cota no Google AI Studio ou aguarde a renovação às 00h UTC.');
+        } else if (errStatus === 404 || msg.includes('404') || msg.toLowerCase().includes('not found')) {
             setGenerateError('Modelo não encontrado. Verifique o nome do modelo Gemini configurado.');
         } else {
             setGenerateError(`Erro na geração: ${msg}`);
