@@ -41,6 +41,7 @@ const App: React.FC = () => {
   const [okrs, setOkrs] = useState<OKR[]>([]);
   const [posts, setPosts] = useState<Post[]>([]);
   const [storeMetrics, setStoreMetrics] = useState<StoreMetric[]>([]);
+  const [ytdStoreMetrics, setYtdStoreMetrics] = useState<StoreMetric[]>([]);
 
   const fetchData = useCallback(async () => {
     try {
@@ -48,15 +49,17 @@ const App: React.FC = () => {
       
       const now = new Date();
       const firstDayOfMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+      const firstDayOfYear  = `${now.getFullYear()}-01-01`;
 
-      const [leadsRes, tasksRes, eventsRes, callsRes, okrsRes, postsRes, metricsRes] = await Promise.all([
+      const [leadsRes, tasksRes, eventsRes, callsRes, okrsRes, postsRes, metricsRes, ytdMetricsRes] = await Promise.all([
         supabase.from('leads').select('*').order('created_at', { ascending: false }),
         supabase.from('tasks').select('*').order('created_at', { ascending: false }),
         supabase.from('events').select('*').order('start_time', { ascending: true }),
         supabase.from('call_logs').select('*').order('created_at', { ascending: false }),
         supabase.from('okrs').select('*').order('created_at', { ascending: true }),
         supabase.from('content_posts').select('*').order('created_at', { ascending: false }),
-        supabase.from('store_metrics').select('*').gte('date', firstDayOfMonth).order('date', { ascending: false })
+        supabase.from('store_metrics').select('*').gte('date', firstDayOfMonth).order('date', { ascending: false }),
+        supabase.from('store_metrics').select('*').gte('date', firstDayOfYear).order('date', { ascending: false }),
       ]);
 
       if (leadsRes.data) {
@@ -120,6 +123,7 @@ const App: React.FC = () => {
 
       if (postsRes.data) setPosts(postsRes.data);
       if (metricsRes.data) setStoreMetrics(metricsRes.data);
+      if (ytdMetricsRes.data) setYtdStoreMetrics(ytdMetricsRes.data);
 
     } catch (error) {
       console.error("Critical Sync Error:", error);
@@ -152,7 +156,7 @@ const App: React.FC = () => {
 
     switch (activeTab) {
       case 'dashboard': 
-        return <Dashboard tasks={tasks} leads={leads} events={events} setActiveTab={setActiveTab} storeMetrics={storeMetrics} isLoading={isLoading} />;
+        return <Dashboard tasks={tasks} leads={leads} events={events} setActiveTab={setActiveTab} storeMetrics={storeMetrics} ytdStoreMetrics={ytdStoreMetrics} isLoading={isLoading} />;
       case 'okrs': 
         return <Okrs okrs={okrs} setOkrs={setOkrs} />;
       case 'pipeline': 
@@ -176,7 +180,7 @@ const App: React.FC = () => {
       case 'ai': 
         return <AIAdvisor />;
       default: 
-        return <Dashboard tasks={tasks} leads={leads} events={events} setActiveTab={setActiveTab} storeMetrics={storeMetrics} isLoading={isLoading} />;
+        return <Dashboard tasks={tasks} leads={leads} events={events} setActiveTab={setActiveTab} storeMetrics={storeMetrics} ytdStoreMetrics={ytdStoreMetrics} isLoading={isLoading} />;
     }
   };
 

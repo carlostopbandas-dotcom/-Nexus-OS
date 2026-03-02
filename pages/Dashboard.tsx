@@ -48,6 +48,7 @@ interface DashboardProps {
   events: CalendarEvent[];
   setActiveTab: (tab: string) => void;
   storeMetrics: StoreMetric[];
+  ytdStoreMetrics: StoreMetric[];
   isLoading: boolean;
 }
 
@@ -62,7 +63,7 @@ const fmt = (v: number) =>
   v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 const Dashboard: React.FC<DashboardProps> = ({
-  tasks, leads, events, setActiveTab, storeMetrics, isLoading,
+  tasks, leads, events, setActiveTab, storeMetrics, ytdStoreMetrics, isLoading,
 }) => {
   const [activeUnit, setActiveUnit] = useState<MainUnit>('Overview');
   const [isSavingMetric, setIsSavingMetric] = useState(false);
@@ -73,6 +74,38 @@ const Dashboard: React.FC<DashboardProps> = ({
     spend: '',
     date: new Date().toLocaleDateString('en-CA'),
   });
+
+  // ── YTD Shopify state ────────────────────────────────────────────────────
+  const [vcchicYtdOrders, setVcchicYtdOrders] = useState<ShopifyOrder[]>([]);
+  const [sezoYtdOrders, setSezoYtdOrders] = useState<ShopifyOrder[]>([]);
+  const [morielYtdOrders, setMorielYtdOrders] = useState<ShopifyOrder[]>([]);
+
+  const loadVcchicYtdOrders = useCallback(async () => {
+    const yearStart = `${new Date().getFullYear()}-01-01T00:00:00`;
+    try {
+      const res = await fetch(`/api/vcchic/orders.json?limit=250&status=any&created_at_min=${yearStart}&fields=id,total_price,financial_status,created_at`);
+      const data = await res.json();
+      setVcchicYtdOrders(data.orders || []);
+    } catch { /* silently fail */ }
+  }, []);
+
+  const loadSezoYtdOrders = useCallback(async () => {
+    const yearStart = `${new Date().getFullYear()}-01-01T00:00:00`;
+    try {
+      const res = await fetch(`/api/sezo/orders.json?limit=250&status=any&created_at_min=${yearStart}&fields=id,total_price,financial_status,created_at`);
+      const data = await res.json();
+      setSezoYtdOrders(data.orders || []);
+    } catch { /* silently fail */ }
+  }, []);
+
+  const loadMorielYtdOrders = useCallback(async () => {
+    const yearStart = `${new Date().getFullYear()}-01-01T00:00:00`;
+    try {
+      const res = await fetch(`/api/shopify/orders.json?limit=250&status=any&created_at_min=${yearStart}&fields=id,total_price,financial_status,created_at`);
+      const data = await res.json();
+      setMorielYtdOrders(data.orders || []);
+    } catch { /* silently fail */ }
+  }, []);
 
   // ── Moriel live state (Shopify) ────────────────────────────────────────────
   const [morielOrders, setMorielOrders] = useState<ShopifyOrder[]>([]);
@@ -142,13 +175,17 @@ const Dashboard: React.FC<DashboardProps> = ({
     loadMorielOrders();
     loadVcchicOrders();
     loadSezoOrders();
+    // YTD: carrega uma vez na montagem (não precisa de polling frequente)
+    loadVcchicYtdOrders();
+    loadSezoYtdOrders();
+    loadMorielYtdOrders();
     const interval = setInterval(() => {
       loadMorielOrders();
       loadVcchicOrders();
       loadSezoOrders();
     }, 5 * 60 * 1000);
     return () => clearInterval(interval);
-  }, [loadMorielOrders, loadVcchicOrders, loadSezoOrders]);
+  }, [loadMorielOrders, loadVcchicOrders, loadSezoOrders, loadVcchicYtdOrders, loadSezoYtdOrders, loadMorielYtdOrders]);
 
   // ── Performance data — VcChic e Moriel vêm do Shopify; spend do Supabase ─
   const performanceData = useMemo<Record<string, StoreStats>>(() => {
@@ -229,6 +266,31 @@ const Dashboard: React.FC<DashboardProps> = ({
   const conversion3D = leads3D.length > 0
     ? parseFloat(((leads3D.filter(l => l.status === LeadStatus.WON).length / leads3D.length) * 100).toFixed(1))
     : 0;
+
+  // ── Faturamento Acumulado do Ano (YTD) ───────────────────────────────────
+  const ytdSales = useMemo(() => {
+    const yearStr = new Date().getFullYear().toString();
+    const mivaveYtd = ytdStoreMetrics
+      .filter(m => m.store_name.trim().toLowerCase() === 'mivave')
+      .reduce((a, m) => a + (Number(m.sales) || 0), 0);
+    const vcchicYtd = vcchicYtdOrders
+      .filter(o => o.financial_status === 'paid')
+      .reduce((a, o) => a + parseFloat(o.total_price), 0);
+    const sezoYtd = sezoYtdOrders
+      .filter(o => o.financial_status === 'paid')
+      .reduce((a, o) => a + parseFloat(o.total_price), 0);
+    const morielYtd = morielYtdOrders
+      .filter(o => o.financial_status === 'paid')
+      .reduce((a, o) => a + parseFloat(o.total_price), 0);
+    const digital3dYtd = leads3D
+      .filter(l => l.status === LeadStatus.WON && l.createdAt?.startsWith(yearStr))
+      .reduce((a, l) => a + l.value, 0);
+    return {
+      ecommerce: mivaveYtd + vcchicYtd + sezoYtd + morielYtd,
+      digital: digital3dYtd,
+      total: mivaveYtd + vcchicYtd + sezoYtd + morielYtd + digital3dYtd,
+    };
+  }, [ytdStoreMetrics, vcchicYtdOrders, sezoYtdOrders, morielYtdOrders, leads3D]);
 
   const activeStats = useMemo(() => {
     if (activeUnit === 'Overview') {
@@ -340,6 +402,30 @@ const Dashboard: React.FC<DashboardProps> = ({
           change={0.4} status="good"
           subtext="Eficiência de Vendas"
         />
+      </div>
+
+      {/* ── YTD Acumulado ────────────────────────────────────────────────── */}
+      <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 rounded-[2rem] p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-2xl">
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-white/10 rounded-2xl">
+            <TrendingUp size={22} className="text-emerald-400" />
+          </div>
+          <div>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em]">Faturamento Acumulado {new Date().getFullYear()}</p>
+            <p className="text-4xl font-black text-white tracking-tighter">R$ {fmt(ytdSales.total)}</p>
+          </div>
+        </div>
+        <div className="flex gap-8 ml-1 md:ml-0">
+          <div className="text-right">
+            <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">E-commerce</p>
+            <p className="text-xl font-black text-slate-200">R$ {fmt(ytdSales.ecommerce)}</p>
+          </div>
+          <div className="w-px bg-slate-700 hidden md:block"></div>
+          <div className="text-right">
+            <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">3D Digital</p>
+            <p className="text-xl font-black text-slate-200">R$ {fmt(ytdSales.digital)}</p>
+          </div>
+        </div>
       </div>
 
       {/* ── Painéis condicionais ───────────────────────────────────────────── */}
