@@ -21,6 +21,7 @@ export const callLogsService = {
     const { data, error } = await supabase
       .from('call_logs')
       .select('*')
+      .is('deleted_at', null)
       .order('created_at', { ascending: false })
     if (error) return { data: null, error: error.message }
     return { data: (data ?? []).map(mapCallLog), error: null }
@@ -88,7 +89,10 @@ export const callLogsService = {
   },
 
   async delete(id: string): Promise<ServiceResult<null>> {
-    const { error } = await supabase.from('call_logs').delete().eq('id', id)
+    const { error } = await supabase
+      .from('call_logs')
+      .update({ deleted_at: new Date().toISOString() })
+      .eq('id', id)
     return { data: null, error: error?.message ?? null }
   },
 }

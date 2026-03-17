@@ -8,6 +8,7 @@ export const leadsService = {
     const { data, error } = await supabase
       .from('leads')
       .select('*')
+      .is('deleted_at', null)
       .order('created_at', { ascending: false })
     if (error) return { data: null, error: error.message }
     const leads: Lead[] = (data ?? []).map((l) => ({
@@ -71,7 +72,10 @@ export const leadsService = {
   },
 
   async delete(id: string): Promise<ServiceResult<null>> {
-    const { error } = await supabase.from('leads').delete().eq('id', id)
+    const { error } = await supabase
+      .from('leads')
+      .update({ deleted_at: new Date().toISOString() })
+      .eq('id', id)
     return { data: null, error: error?.message ?? null }
   },
 }
