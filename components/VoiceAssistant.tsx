@@ -69,15 +69,15 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onAddCallLog }) => {
   };
 
   const connectToGemini = async () => {
-    if (!process.env.API_KEY) {
+    if (!import.meta.env.VITE_GEMINI_API_KEY) {
         alert("API Key necessária para o Nexus Voice.");
         return;
     }
 
     setIsConnecting(true);
-    
+
     try {
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+        const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
         
         // Setup Audio Contexts
         // Note: Using standard sample rate for output to match system usually works best, but 24000 is common for Gemini output.
@@ -179,11 +179,11 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onAddCallLog }) => {
 
                                 sessionPromise.then(session => {
                                     session.sendToolResponse({
-                                        functionResponses: {
+                                        functionResponses: [{
                                             id: fc.id,
                                             name: fc.name,
                                             response: { result: "Call logged successfully." }
-                                        }
+                                        }]
                                     });
                                 });
                             }
@@ -227,9 +227,19 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onAddCallLog }) => {
             });
         };
 
-    } catch (error) {
+    } catch (error: any) {
         console.error("Connection failed", error);
         setIsConnecting(false);
+        setIsActive(false);
+        setAssistantStatus('idle');
+        const msg = error?.message || String(error);
+        if (msg.includes('Permission denied') || msg.includes('NotAllowedError')) {
+            alert("Permissão de microfone negada. Habilite o acesso ao microfone no navegador.");
+        } else if (msg.includes('NotFoundError')) {
+            alert("Nenhum microfone encontrado. Conecte um microfone e tente novamente.");
+        } else {
+            alert("Erro ao conectar Nexus Voice: " + msg);
+        }
     }
   };
 
