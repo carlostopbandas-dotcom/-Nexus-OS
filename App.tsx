@@ -21,17 +21,14 @@ import { Loader2 } from 'lucide-react';
 
 const AppContent: React.FC = () => {
   const location = useLocation();
-  const { fetchAll, loading } = useAppStore();
+  const { fetchAll, loading, addCallLog } = useAppStore();
 
   useEffect(() => {
     fetchAll();
-    const handleGlobalUpdate = () => fetchAll();
-    window.addEventListener('nexus-data-updated', handleGlobalUpdate);
-    return () => window.removeEventListener('nexus-data-updated', handleGlobalUpdate);
   }, [fetchAll]);
 
-  const handleAddCallLog = async (_newLog: CallLog) => {
-    window.dispatchEvent(new CustomEvent('nexus-data-updated'));
+  const handleAddCallLog = (newLog: CallLog) => {
+    addCallLog(newLog);
   };
 
   return (

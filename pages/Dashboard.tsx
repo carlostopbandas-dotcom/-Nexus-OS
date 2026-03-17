@@ -3,7 +3,7 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import StatCard from '../components/StatCard';
-import { supabase } from '../lib/supabase';
+import { storeMetricsService } from '../services/storeMetricsService';
 import { Store, Calculator, Loader2, Save, Zap, Check, TrendingUp, ShieldCheck, Target, Layers, Globe, ArrowRight, Bell, Sparkles, ChevronRight } from 'lucide-react';
 import { LeadStatus } from '../types';
 import { useAppStore } from '../store/useAppStore';
@@ -33,7 +33,7 @@ interface StoreStats {
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
-  const { tasks, leads, events, storeMetrics, loading: isLoading } = useAppStore();
+  const { tasks, leads, events, storeMetrics, addStoreMetric, fetchAll, loading: isLoading } = useAppStore();
   const [activeUnit, setActiveUnit] = useState<MainUnit>('Overview');
   const [isSavingMetric, setIsSavingMetric] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -118,13 +118,12 @@ const Dashboard: React.FC = () => {
       if (isNaN(sales) || isNaN(spend)) return;
       setIsSavingMetric(true);
       try {
-          const { error } = await supabase.from('store_metrics').insert({
-              store_name: newMetric.store_name, sales, spend, roas: spend > 0 ? sales/spend : 0, date: newMetric.date
-          });
-          if (error) throw error;
+          const payload = { store_name: newMetric.store_name, sales, spend, roas: spend > 0 ? sales/spend : 0, date: newMetric.date };
+          const { data, error } = await storeMetricsService.create(payload);
+          if (error) throw new Error(error);
+          if (data) addStoreMetric(data);
           setNewMetric({ ...newMetric, sales: '', spend: '' });
           setSaveSuccess(true);
-          window.dispatchEvent(new CustomEvent('nexus-data-updated'));
           setTimeout(() => setSaveSuccess(false), 3000);
       } catch (e) { alert("Erro ao sincronizar."); } finally { setIsSavingMetric(false); }
   };
@@ -156,7 +155,7 @@ const Dashboard: React.FC = () => {
               </button>
             ))}
           </div>
-          <button onClick={() => window.dispatchEvent(new CustomEvent('nexus-data-updated'))} className="p-4 bg-white border border-slate-100 rounded-2xl text-slate-400 hover:text-blue-600 hover:shadow-2xl transition-all shadow-sm">
+          <button onClick={() => fetchAll()} className="p-4 bg-white border border-slate-100 rounded-2xl text-slate-400 hover:text-blue-600 hover:shadow-2xl transition-all shadow-sm">
             <Zap size={20} className={isLoading ? "animate-pulse text-blue-600" : ""} />
           </button>
         </div>

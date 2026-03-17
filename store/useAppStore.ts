@@ -41,7 +41,7 @@ interface AppState {
   fetchStoreMetrics: () => Promise<void>
   fetchAll: () => Promise<void>
 
-  // Mutations
+  // Mutations — set full arrays
   setLeads: (leads: Lead[]) => void
   setTasks: (tasks: Task[]) => void
   setEvents: (events: CalendarEvent[]) => void
@@ -49,6 +49,19 @@ interface AppState {
   setOkrs: (okrs: OKR[]) => void
   setContentPosts: (posts: Post[]) => void
   setStoreMetrics: (metrics: StoreMetric[]) => void
+
+  // Mutations — granular (no re-fetch needed)
+  addLead: (lead: Lead) => void
+  updateLead: (id: string, updates: Partial<Lead>) => void
+  removeLead: (id: string) => void
+  addTask: (task: Task) => void
+  updateTask: (id: string, updates: Partial<Task>) => void
+  removeTask: (id: string) => void
+  addEvent: (event: CalendarEvent) => void
+  removeEvent: (id: string) => void
+  addCallLog: (log: CallLog) => void
+  removeCallLog: (id: string) => void
+  addStoreMetric: (metric: StoreMetric) => void
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -126,4 +139,20 @@ export const useAppStore = create<AppState>((set, get) => ({
   setOkrs: (okrs) => set({ okrs }),
   setContentPosts: (contentPosts) => set({ contentPosts }),
   setStoreMetrics: (storeMetrics) => set({ storeMetrics }),
+
+  addLead: (lead) => set((state) => ({ leads: [lead, ...state.leads] })),
+  updateLead: (id, updates) => set((state) => ({ leads: state.leads.map((l) => l.id === id ? { ...l, ...updates } : l) })),
+  removeLead: (id) => set((state) => ({ leads: state.leads.filter((l) => l.id !== id) })),
+
+  addTask: (task) => set((state) => ({ tasks: [task, ...state.tasks] })),
+  updateTask: (id, updates) => set((state) => ({ tasks: state.tasks.map((t) => t.id === id ? { ...t, ...updates } : t) })),
+  removeTask: (id) => set((state) => ({ tasks: state.tasks.filter((t) => t.id !== id) })),
+
+  addEvent: (event) => set((state) => ({ events: [...state.events, event] })),
+  removeEvent: (id) => set((state) => ({ events: state.events.filter((e) => e.id !== id) })),
+
+  addCallLog: (log) => set((state) => ({ callLogs: [log, ...state.callLogs] })),
+  removeCallLog: (id) => set((state) => ({ callLogs: state.callLogs.filter((c) => c.id !== id) })),
+
+  addStoreMetric: (metric) => set((state) => ({ storeMetrics: [metric, ...state.storeMetrics] })),
 }))

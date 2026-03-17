@@ -3,13 +3,14 @@ import React, { useState, useEffect } from 'react';
 import { CallLog, Lead } from '../types';
 import { Play, Pause, FileText, BrainCircuit, Loader2, Sparkles, ChevronRight, Mic, Calendar, Clock, User, CheckCircle2, Settings, PhoneCall, Plus, X, Save, MessageSquare, Search, ChevronDown, Trash2, AlertCircle } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
-import { supabase } from '../lib/supabase';
+import { callLogsService } from '../services/callLogsService';
+import { eventsService } from '../services/eventsService';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import { useAppStore } from '../store/useAppStore';
 
 const Calls: React.FC = () => {
-  const { callLogs, setCallLogs, leads } = useAppStore();
+  const { callLogs, setCallLogs, removeCallLog, addCallLog, leads } = useAppStore();
   const [selectedCall, setSelectedCall] = useState<CallLog | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -48,29 +49,21 @@ const Calls: React.FC = () => {
       setShowConfirmDelete(false);
 
       try {
-          // 1. Limpeza no histórico de calls
-          const { error: callError } = await supabase
-            .from('call_logs')
-            .delete()
-            .eq('id', idToDelete);
-          
-          if (callError) throw callError;
-          
-          // 2. Limpeza na agenda (events)
-          const searchPattern = `%${leadNameToMatch.trim()}%`;
-          await supabase
-            .from('events')
-            .delete()
-            .eq('type', 'call')
-            .ilike('title', searchPattern);
-            
-          // 3. ATUALIZAÇÃO GLOBAL IMEDIATA
-          setCallLogs(prev => prev.filter(c => String(c.id) !== String(idToDelete)));
+          const { error: callError } = await callLogsService.delete(idToDelete);
+          if (callError) throw new Error(callError);
+
+          // Limpeza na agenda (best-effort, sem FK ainda)
+          const leadName = leadNameToMatch.trim();
+          const allEvents = await eventsService.getAll();
+          if (allEvents.data) {
+            const matchingEvents = allEvents.data.filter(
+              e => e.type === 'call' && e.title.toLowerCase().includes(leadName.toLowerCase())
+            );
+            await Promise.all(matchingEvents.map(e => eventsService.delete(e.id)));
+          }
+
+          removeCallLog(idToDelete);
           setSelectedCall(null);
-          
-          // 4. Notifica sincronização
-          window.dispatchEvent(new CustomEvent('nexus-data-updated'));
-          
       } catch (e) {
           console.error("Erro crítico na exclusão:", e);
           alert("Não foi possível excluir o registro. Verifique sua conexão.");
@@ -102,21 +95,32 @@ const Calls: React.FC = () => {
               created_at: new Date().toISOString()
           };
 
-          const { error: callError } = await supabase.from('call_logs').insert(callPayload);
-          if (callError) throw callError;
+          const { data: savedLog, error: callError } = await callLogsService.create({
+              leadName: callPayload.lead_name,
+              date: callPayload.date,
+              duration: callPayload.duration,
+              type: callPayload.type as CallLog['type'],
+              status: callPayload.status as CallLog['status'],
+              sentiment: callPayload.sentiment as CallLog['sentiment'],
+              transcriptSnippet: callPayload.transcript_snippet,
+              summary: callPayload.summary,
+          });
+          if (callError) throw new Error(callError);
 
           const today = new Date();
           const targetDate = new Date(newCall.date);
           const dayOffset = Math.round((targetDate.getTime() - today.getTime()) / (1000 * 3600 * 24));
 
-          await supabase.from('events').insert({
+          const { data: savedEvent } = await eventsService.create({
               title: `Call: ${newCall.leadName}`,
-              start_time: newCall.time,
-              end_time: "18:00", 
+              start: newCall.time,
+              end: "18:00",
               type: 'call',
               attendees: [newCall.leadName],
-              day_offset: dayOffset
+              dayOffset,
           });
+
+          if (savedLog) addCallLog(savedLog);
 
           setIsModalOpen(false);
           setNewCall({
@@ -129,8 +133,6 @@ const Calls: React.FC = () => {
               time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
           });
           setLeadSearch('');
-          
-          window.dispatchEvent(new CustomEvent('nexus-data-updated'));
       } catch (e) { 
           console.error(e); 
       } finally { 

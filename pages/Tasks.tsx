@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Task, BusinessUnit } from '../types';
 import { useAppStore } from '../store/useAppStore';
-import { supabase } from '../lib/supabase';
+import { tasksService } from '../services/tasksService';
 import { CheckSquare, Plus, Trash2, Sparkles, Loader2, Trophy, ArrowUp, ArrowDown, Briefcase, ShoppingBag, User, Store, Youtube, BarChart3, Target, MousePointer2, AlertTriangle } from 'lucide-react';
 import { GoogleGenAI, Type } from "@google/genai";
 import { motion, AnimatePresence } from 'framer-motion';
@@ -77,7 +77,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onToggle, onMove, onRemove })
 )};
 
 const Tasks: React.FC = () => {
-  const { tasks, setTasks } = useAppStore();
+  const { tasks, setTasks, addTask, updateTask, removeTask: removeTaskFromStore } = useAppStore();
   const [newTaskInput, setNewTaskInput] = useState('');
   const [isClassifying, setIsClassifying] = useState(false);
   const [isReorganizing, setIsReorganizing] = useState(false);
@@ -140,10 +140,9 @@ const Tasks: React.FC = () => {
           setTasks(updatedTasks);
 
           for (const item of rebalanced) {
-              await supabase.from('tasks').update({ type: item.type }).eq('id', item.id);
+              await tasksService.update(item.id, { type: item.type as Task['type'] });
           }
 
-          window.dispatchEvent(new CustomEvent('nexus-data-updated'));
       } catch (error) {
           console.error("Erro ao rebalancear:", error);
       } finally {
@@ -210,14 +209,14 @@ const Tasks: React.FC = () => {
               finalType = 'Medium';
           }
 
-          const { data } = await supabase.from('tasks').insert({
+          const { data } = await tasksService.create({
               title: taskValue,
-              type: finalType,
+              type: finalType as Task['type'],
               completed: false,
-              category: aiData.category || 'Personal'
-          }).select().single();
+              category: (aiData.category || 'Personal') as Task['category'],
+          });
 
-          if (data) setTasks(prev => [...prev, data]);
+          if (data) addTask(data);
           setNewTaskInput('');
       } catch (error) {
           console.error(error);
@@ -227,35 +226,32 @@ const Tasks: React.FC = () => {
   };
 
   const toggleTask = async (id: string, type: string, currentStatus: boolean) => {
-      setTasks(prev => prev.map(t => t.id === id ? { ...t, completed: !currentStatus } : t));
+      updateTask(id, { completed: !currentStatus });
       if (type === 'Big Rock' && !currentStatus) {
           setCelebrate(true);
           setTimeout(() => setCelebrate(false), 3000);
       }
-      await supabase.from('tasks').update({ completed: !currentStatus }).eq('id', id);
+      await tasksService.toggleCompleted(id, !currentStatus);
   };
 
   const removeTask = async (id: string) => {
-      setTasks(prev => prev.filter(t => t.id !== id));
-      await supabase.from('tasks').delete().eq('id', id);
+      removeTaskFromStore(id);
+      await tasksService.delete(id);
   };
 
   const moveTask = async (id: string, direction: 'up' | 'down') => {
-      setTasks(prev => {
-          return prev.map(t => {
-              if (t.id !== id) return t;
-              let next: 'Big Rock' | 'Medium' | 'Small' = t.type;
-              if (direction === 'up') {
-                  if (t.type === 'Small') next = 'Medium';
-                  else if (t.type === 'Medium') next = 'Big Rock';
-              } else {
-                  if (t.type === 'Big Rock') next = 'Medium';
-                  else if (t.type === 'Medium') next = 'Small';
-              }
-              supabase.from('tasks').update({ type: next }).eq('id', id);
-              return { ...t, type: next };
-          });
-      });
+      const task = tasks.find(t => t.id === id);
+      if (!task) return;
+      let next: 'Big Rock' | 'Medium' | 'Small' = task.type;
+      if (direction === 'up') {
+          if (task.type === 'Small') next = 'Medium';
+          else if (task.type === 'Medium') next = 'Big Rock';
+      } else {
+          if (task.type === 'Big Rock') next = 'Medium';
+          else if (task.type === 'Medium') next = 'Small';
+      }
+      updateTask(id, { type: next });
+      tasksService.update(id, { type: next });
   };
 
   return (

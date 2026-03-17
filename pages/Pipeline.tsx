@@ -1,13 +1,15 @@
 
 import React, { useState } from 'react';
 import { Lead, LeadStatus } from '../types';
-import { supabase } from '../lib/supabase';
 import { useAppStore } from '../store/useAppStore';
+import { leadsService } from '../services/leadsService';
+import { eventsService } from '../services/eventsService';
+import { callLogsService } from '../services/callLogsService';
 import { Plus, Clock, X, Save, Loader2, Sparkles, Thermometer, Zap, Check, ChevronLeft, ChevronRight, MoreVertical, Search } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const Pipeline: React.FC = () => {
-  const { leads, setLeads } = useAppStore();
+  const { leads, addLead, updateLead, addEvent, addCallLog } = useAppStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
@@ -36,19 +38,12 @@ const Pipeline: React.FC = () => {
     .filter(l => l.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
   const handleUpdateStatus = async (leadId: string, newStatus: LeadStatus) => {
-      const originalLeads = [...leads];
-      setLeads(prev => prev.map(l => l.id === leadId ? { ...l, status: newStatus } : l));
+      const originalStatus = leads.find(l => l.id === leadId)?.status;
+      updateLead(leadId, { status: newStatus });
 
-      try {
-          const { error } = await supabase
-              .from('leads')
-              .update({ status: newStatus })
-              .eq('id', leadId);
-
-          if (error) throw error;
-          window.dispatchEvent(new CustomEvent('nexus-data-updated'));
-      } catch (e) {
-          setLeads(originalLeads);
+      const { error } = await leadsService.update(leadId, { status: newStatus });
+      if (error && originalStatus) {
+          updateLead(leadId, { status: originalStatus });
           alert("Erro ao mover lead. Sincronização falhou.");
       }
   };
@@ -57,15 +52,18 @@ const Pipeline: React.FC = () => {
       if (!newLead.name) return;
       setIsSaving(true);
       try {
-          const { error } = await supabase.from('leads').insert({
-              name: newLead.name, email: newLead.email, product: newLead.product,
-              source: newLead.source, value: newLead.value, status: newLead.status,
-              created_at: new Date().toISOString()
+          const { data, error } = await leadsService.create({
+              name: newLead.name ?? '',
+              email: newLead.email ?? '',
+              product: newLead.product ?? 'Nexus',
+              source: newLead.source ?? 'Organic',
+              value: newLead.value ?? 0,
+              status: newLead.status ?? LeadStatus.NEW,
           });
-          if (error) throw error;
+          if (error) throw new Error(error);
+          if (data) addLead(data);
           setIsModalOpen(false);
           setNewLead({ name: '', email: '', product: 'Nexus', source: 'Organic', value: 0, status: LeadStatus.NEW });
-          window.dispatchEvent(new CustomEvent('nexus-data-updated'));
       } catch (err) { alert("Erro ao salvar."); } finally { setIsSaving(false); }
   };
 
@@ -78,34 +76,37 @@ const Pipeline: React.FC = () => {
           const targetDate = new Date(scheduleData.date);
           const dayOffset = Math.round((targetDate.getTime() - today.getTime()) / (1000 * 3600 * 24));
 
-          const { error: eventErr } = await supabase.from('events').insert({
+          const { data: eventData, error: eventErr } = await eventsService.create({
               title: `${scheduleData.type}: ${selectedLead.name}`,
-              start_time: scheduleData.time,
-              end_time: "18:00",
+              start: scheduleData.time,
+              end: "18:00",
               type: 'call',
               attendees: [selectedLead.name],
-              day_offset: dayOffset
+              dayOffset,
           });
 
-          const { error: logErr } = await supabase.from('call_logs').insert({
-              lead_name: selectedLead.name,
+          const { data: logData, error: logErr } = await callLogsService.create({
+              leadName: selectedLead.name,
               date: `${scheduleData.date} ${scheduleData.time}`,
-              type: scheduleData.type,
+              type: scheduleData.type as 'Discovery' | 'Closing' | 'Mentorship' | 'Mapa da Clareza',
               status: 'Scheduled',
               sentiment: 'Neutral',
-              transcript_snippet: `Agendamento automático via Pipeline CRM. Foco: ${selectedLead.product}`,
-              summary: `Call de ${scheduleData.type} agendada.`
+              transcriptSnippet: `Agendamento automático via Pipeline CRM. Foco: ${selectedLead.product}`,
+              summary: `Call de ${scheduleData.type} agendada.`,
+              duration: '',
           });
 
           if (selectedLead.status === LeadStatus.NEW) {
-              await supabase.from('leads').update({ status: LeadStatus.DIAGNOSTIC_SCHEDULED }).eq('id', selectedLead.id);
+              const { error: leadErr } = await leadsService.update(selectedLead.id, { status: LeadStatus.DIAGNOSTIC_SCHEDULED });
+              if (!leadErr) updateLead(selectedLead.id, { status: LeadStatus.DIAGNOSTIC_SCHEDULED });
           }
 
           if (eventErr || logErr) throw new Error("Erro na sincronização tripla.");
 
+          if (eventData) addEvent(eventData);
+          if (logData) addCallLog(logData);
           setIsScheduleModalOpen(false);
           setSelectedLead(null);
-          window.dispatchEvent(new CustomEvent('nexus-data-updated'));
       } catch (e) {
           alert("Falha ao sincronizar com o ecossistema.");
       } finally {

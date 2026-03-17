@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { DAILY_ROUTINE } from '../constants';
 import { CalendarEvent, ScheduleBlock, Task } from '../types';
-import { supabase } from '../lib/supabase';
+import { eventsService } from '../services/eventsService';
 import { Clock, User, Phone, Megaphone, Sparkles, Calendar as CalendarIcon, Zap, AlertCircle, Trash2, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppStore } from '../store/useAppStore';
@@ -10,7 +10,7 @@ import { useAppStore } from '../store/useAppStore';
 type BlockStatus = 'past' | 'current' | 'future';
 
 const Routine: React.FC = () => {
-  const { events, setEvents, tasks } = useAppStore();
+  const { events, setEvents, removeEvent, tasks } = useAppStore();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [viewMode, setViewMode] = useState<'real' | 'ideal'>('real');
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -42,26 +42,11 @@ const Routine: React.FC = () => {
     return checkMin >= startMin && checkMin < endMin;
   };
 
-  const fetchEvents = useCallback(async () => {
-    const { data } = await supabase.from('events').select('*').order('start_time', { ascending: true });
-    if (data) {
-        setEvents(data.map((e: any) => ({
-            id: e.id,
-            title: e.title,
-            start: e.start_time,
-            end: e.end_time,
-            type: e.type as any,
-            attendees: e.attendees,
-            dayOffset: e.day_offset
-        })));
-    }
-  }, [setEvents]);
-
   useEffect(() => {
-    fetchEvents();
-    window.addEventListener('nexus-data-updated', fetchEvents);
-    return () => window.removeEventListener('nexus-data-updated', fetchEvents);
-  }, [fetchEvents]);
+    eventsService.getAll().then(({ data }) => {
+      if (data) setEvents(data);
+    });
+  }, [setEvents]);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 30000);
@@ -69,23 +54,17 @@ const Routine: React.FC = () => {
   }, []);
 
   const handleDeleteEvent = async (id: string) => {
-      // 1. Atualização Otimista
       const previousEvents = [...events];
-      setEvents(prev => prev.filter(ev => ev.id !== id));
+      removeEvent(id);
       setDeletingId(id);
 
-      try {
-          const { error } = await supabase.from('events').delete().eq('id', id);
-          if (error) throw error;
-          
-          window.dispatchEvent(new CustomEvent('nexus-data-updated'));
-      } catch (e) {
-          console.error("Erro ao deletar:", e);
+      const { error } = await eventsService.delete(id);
+      if (error) {
+          console.error("Erro ao deletar:", error);
           setEvents(previousEvents);
           alert("Erro ao remover compromisso.");
-      } finally {
-          setDeletingId(null);
       }
+      setDeletingId(null);
   };
 
   const getDayOffset = (date: Date) => {
