@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { Task, BusinessUnit } from '../types';
+import { useAppStore } from '../store/useAppStore';
 import { supabase } from '../lib/supabase';
 import { CheckSquare, Plus, Trash2, Sparkles, Loader2, Trophy, ArrowUp, ArrowDown, Briefcase, ShoppingBag, User, Store, Youtube, BarChart3, Target, MousePointer2, AlertTriangle } from 'lucide-react';
 import { GoogleGenAI, Type } from "@google/genai";
@@ -13,10 +14,6 @@ interface TaskCardProps {
     onRemove: (id: string) => void;
 }
 
-interface TasksProps {
-    tasks: Task[];
-    setTasks: React.Dispatch<React.SetStateAction<Task[]>>;
-}
 
 const getCategoryStyles = (cat: string) => {
     if (cat === '3D Digital') return { icon: <Briefcase size={12} />, style: 'text-blue-600 bg-blue-50' };
@@ -79,7 +76,8 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onToggle, onMove, onRemove })
     </motion.div>
 )};
 
-const Tasks: React.FC<TasksProps> = ({ tasks, setTasks }) => {
+const Tasks: React.FC = () => {
+  const { tasks, setTasks } = useAppStore();
   const [newTaskInput, setNewTaskInput] = useState('');
   const [isClassifying, setIsClassifying] = useState(false);
   const [isReorganizing, setIsReorganizing] = useState(false);

@@ -2,15 +2,12 @@
 import React, { useState } from 'react';
 import { Lead, LeadStatus } from '../types';
 import { supabase } from '../lib/supabase';
+import { useAppStore } from '../store/useAppStore';
 import { Plus, Clock, X, Save, Loader2, Sparkles, Thermometer, Zap, Check, ChevronLeft, ChevronRight, MoreVertical, Search } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-interface PipelineProps {
-    leads: Lead[];
-    setLeads: React.Dispatch<React.SetStateAction<Lead[]>>;
-}
-
-const Pipeline: React.FC<PipelineProps> = ({ leads, setLeads }) => {
+const Pipeline: React.FC = () => {
+  const { leads, setLeads } = useAppStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);

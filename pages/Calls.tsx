@@ -6,13 +6,10 @@ import { GoogleGenAI } from "@google/genai";
 import { supabase } from '../lib/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
 
-interface CallsProps {
-    callLogs: CallLog[];
-    setCallLogs: React.Dispatch<React.SetStateAction<CallLog[]>>;
-    leads: Lead[];
-}
+import { useAppStore } from '../store/useAppStore';
 
-const Calls: React.FC<CallsProps> = ({ callLogs, setCallLogs, leads }) => {
+const Calls: React.FC = () => {
+  const { callLogs, setCallLogs, leads } = useAppStore();
   const [selectedCall, setSelectedCall] = useState<CallLog | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);

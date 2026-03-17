@@ -5,7 +5,8 @@ import { useNavigate } from 'react-router-dom';
 import StatCard from '../components/StatCard';
 import { supabase } from '../lib/supabase';
 import { Store, Calculator, Loader2, Save, Zap, Check, TrendingUp, ShieldCheck, Target, Layers, Globe, ArrowRight, Bell, Sparkles, ChevronRight } from 'lucide-react';
-import { Task, CalendarEvent, Lead, LeadStatus } from '../types';
+import { LeadStatus } from '../types';
+import { useAppStore } from '../store/useAppStore';
 
 type MainUnit = 'Overview' | '3D Digital' | 'Grupo VcChic';
 
@@ -30,16 +31,9 @@ interface StoreStats {
     isMain: boolean;
 }
 
-interface DashboardProps {
-    tasks: Task[];
-    leads: Lead[];
-    events: CalendarEvent[];
-    storeMetrics: StoreMetric[];
-    isLoading: boolean;
-}
-
-const Dashboard: React.FC<DashboardProps> = ({ tasks, leads, events, storeMetrics, isLoading }) => {
+const Dashboard: React.FC = () => {
   const navigate = useNavigate();
+  const { tasks, leads, events, storeMetrics, loading: isLoading } = useAppStore();
   const [activeUnit, setActiveUnit] = useState<MainUnit>('Overview');
   const [isSavingMetric, setIsSavingMetric] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);

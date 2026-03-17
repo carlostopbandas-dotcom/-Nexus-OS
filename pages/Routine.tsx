@@ -5,16 +5,12 @@ import { CalendarEvent, ScheduleBlock, Task } from '../types';
 import { supabase } from '../lib/supabase';
 import { Clock, User, Phone, Megaphone, Sparkles, Calendar as CalendarIcon, Zap, AlertCircle, Trash2, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAppStore } from '../store/useAppStore';
 
 type BlockStatus = 'past' | 'current' | 'future';
 
-interface RoutineProps {
-    events: CalendarEvent[];
-    setEvents: React.Dispatch<React.SetStateAction<CalendarEvent[]>>;
-    tasks?: Task[];
-}
-
-const Routine: React.FC<RoutineProps> = ({ events, setEvents, tasks = [] }) => {
+const Routine: React.FC = () => {
+  const { events, setEvents, tasks } = useAppStore();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [viewMode, setViewMode] = useState<'real' | 'ideal'>('real');
   const [selectedDate, setSelectedDate] = useState(new Date());

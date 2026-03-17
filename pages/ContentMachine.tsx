@@ -5,12 +5,10 @@ import { GoogleGenAI } from "@google/genai";
 import { Platform, Post } from '../types';
 import { supabase } from '../lib/supabase';
 
-interface ContentMachineProps {
-    posts: Post[];
-    setPosts: React.Dispatch<React.SetStateAction<Post[]>>;
-}
+import { useAppStore } from '../store/useAppStore';
 
-const ContentMachine: React.FC<ContentMachineProps> = ({ posts, setPosts }) => {
+const ContentMachine: React.FC = () => {
+  const { contentPosts: posts, setContentPosts: setPosts } = useAppStore();
   const [activePlatform, setActivePlatform] = useState<Platform>('linkedin');
   const [topic, setTopic] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);

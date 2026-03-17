@@ -1,8 +1,7 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useEffect } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { supabase } from './lib/supabase';
 import { AuthProvider } from './components/auth/AuthProvider';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import Sidebar from './components/Sidebar';
@@ -16,94 +15,20 @@ import Calls from './pages/Calls';
 import ContentMachine from './pages/ContentMachine';
 import KnowledgeHub from './pages/KnowledgeHub';
 import VoiceAssistant from './components/VoiceAssistant';
-import { CallLog, Task, Lead, CalendarEvent, OKR, Post } from './types';
+import { useAppStore } from './store/useAppStore';
+import type { CallLog } from './types';
 import { Loader2 } from 'lucide-react';
-
-interface StoreMetric {
-    id?: string;
-    store_name: string;
-    sales: number | string;
-    spend: number | string;
-    roas: number | string;
-    date: string;
-}
 
 const AppContent: React.FC = () => {
   const location = useLocation();
-  const [isLoading, setIsLoading] = useState(true);
-
-  // GLOBAL STATE
-  const [callLogs, setCallLogs] = useState<CallLog[]>([]);
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [leads, setLeads] = useState<Lead[]>([]);
-  const [events, setEvents] = useState<CalendarEvent[]>([]);
-  const [okrs, setOkrs] = useState<OKR[]>([]);
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [storeMetrics, setStoreMetrics] = useState<StoreMetric[]>([]);
-
-  const fetchData = useCallback(async () => {
-    try {
-      console.log("Nexus OS: Sincronizando ecossistema...");
-
-      const now = new Date();
-      const firstDayOfMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
-
-      const [leadsRes, tasksRes, eventsRes, callsRes, okrsRes, postsRes, metricsRes] = await Promise.all([
-        supabase.from('leads').select('*').order('created_at', { ascending: false }),
-        supabase.from('tasks').select('*').order('created_at', { ascending: false }),
-        supabase.from('events').select('*').order('start_time', { ascending: true }),
-        supabase.from('call_logs').select('*').order('created_at', { ascending: false }),
-        supabase.from('okrs').select('*').order('created_at', { ascending: true }),
-        supabase.from('content_posts').select('*').order('created_at', { ascending: false }),
-        supabase.from('store_metrics').select('*').gte('date', firstDayOfMonth).order('date', { ascending: false })
-      ]);
-
-      if (leadsRes.data) {
-        setLeads(leadsRes.data.map((l: any) => ({
-          id: l.id, name: l.name, email: l.email, source: l.source,
-          status: l.status, value: l.value, product: l.product, createdAt: l.created_at
-        })));
-      }
-      if (tasksRes.data) {
-        setTasks(tasksRes.data.map((t: any) => ({
-          id: t.id, title: t.title, type: t.type, completed: t.completed, category: t.category
-        })));
-      }
-      if (eventsRes.data) {
-        setEvents(eventsRes.data.map((e: any) => ({
-          id: e.id, title: e.title, start: e.start_time, end: e.end_time,
-          type: e.type, attendees: e.attendees, dayOffset: e.day_offset
-        })));
-      }
-      if (callsRes.data) {
-        setCallLogs(callsRes.data.map((c: any) => ({
-          id: c.id, leadName: c.lead_name, date: c.date, duration: c.duration,
-          type: c.type, status: c.status, sentiment: c.sentiment,
-          transcriptSnippet: c.transcript_snippet, summary: c.summary
-        })));
-      }
-      if (okrsRes.data) {
-        setOkrs(okrsRes.data.map((o: any) => ({
-          id: o.id, unit: o.unit, objective: o.objective,
-          progress: o.progress, keyResults: o.key_results
-        })));
-      }
-      if (postsRes.data) setPosts(postsRes.data);
-      if (metricsRes.data) setStoreMetrics(metricsRes.data);
-
-    } catch (error) {
-      console.error("Critical Sync Error:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  const { fetchAll, loading } = useAppStore();
 
   useEffect(() => {
-    fetchData();
-    const handleGlobalUpdate = () => fetchData();
+    fetchAll();
+    const handleGlobalUpdate = () => fetchAll();
     window.addEventListener('nexus-data-updated', handleGlobalUpdate);
     return () => window.removeEventListener('nexus-data-updated', handleGlobalUpdate);
-  }, [fetchData]);
+  }, [fetchAll]);
 
   const handleAddCallLog = async (_newLog: CallLog) => {
     window.dispatchEvent(new CustomEvent('nexus-data-updated'));
@@ -123,7 +48,7 @@ const AppContent: React.FC = () => {
 
         <div className="h-full overflow-y-auto custom-scrollbar p-8">
           <div className="max-w-[1440px] mx-auto min-h-full pb-20">
-            {isLoading ? (
+            {loading ? (
               <div className="flex flex-col items-center justify-center h-full text-slate-400">
                 <Loader2 size={40} className="animate-spin mb-4 text-blue-600" />
                 <p className="font-bold text-xs uppercase tracking-widest">Sincronizando Nexus Cloud...</p>
@@ -139,16 +64,16 @@ const AppContent: React.FC = () => {
                   className="h-full"
                 >
                   <Routes location={location}>
-                    <Route path="/" element={<Dashboard tasks={tasks} leads={leads} events={events} storeMetrics={storeMetrics} isLoading={isLoading} />} />
-                    <Route path="/okrs" element={<Okrs okrs={okrs} setOkrs={setOkrs} />} />
-                    <Route path="/pipeline" element={<Pipeline leads={leads} setLeads={setLeads} />} />
-                    <Route path="/content" element={<ContentMachine posts={posts} setPosts={setPosts} />} />
+                    <Route path="/" element={<Dashboard />} />
+                    <Route path="/okrs" element={<Okrs />} />
+                    <Route path="/pipeline" element={<Pipeline />} />
+                    <Route path="/content" element={<ContentMachine />} />
                     <Route path="/knowledge" element={<KnowledgeHub />} />
-                    <Route path="/calls" element={<Calls callLogs={callLogs} setCallLogs={setCallLogs} leads={leads} />} />
-                    <Route path="/routine" element={<Routine events={events} setEvents={setEvents} tasks={tasks} />} />
-                    <Route path="/tasks" element={<Tasks tasks={tasks} setTasks={setTasks} />} />
+                    <Route path="/calls" element={<Calls />} />
+                    <Route path="/routine" element={<Routine />} />
+                    <Route path="/tasks" element={<Tasks />} />
                     <Route path="/ai" element={<AIAdvisor />} />
-                    <Route path="*" element={<Dashboard tasks={tasks} leads={leads} events={events} storeMetrics={storeMetrics} isLoading={isLoading} />} />
+                    <Route path="*" element={<Dashboard />} />
                   </Routes>
                 </motion.div>
               </AnimatePresence>

@@ -1,15 +1,11 @@
 
 import React from 'react';
-import { OKR } from '../types';
 import { CheckCircle2, Circle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { useAppStore } from '../store/useAppStore';
 
-interface OkrsProps {
-    okrs: OKR[];
-    setOkrs: React.Dispatch<React.SetStateAction<OKR[]>>;
-}
-
-const Okrs: React.FC<OkrsProps> = ({ okrs, setOkrs }) => {
+const Okrs: React.FC = () => {
+  const { okrs, setOkrs } = useAppStore();
   
   const toggleKeyResult = async (okrId: string, resultIndex: number) => {
     // 1. Optimistic Update Local State
