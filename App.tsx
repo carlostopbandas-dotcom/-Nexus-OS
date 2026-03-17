@@ -2,6 +2,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from './lib/supabase';
+import { AuthProvider } from './components/auth/AuthProvider';
+import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import Sidebar from './components/Sidebar';
 import Dashboard from './pages/Dashboard';
 import Okrs from './pages/Okrs';
@@ -172,37 +174,41 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen bg-[#F0F4F8] text-slate-900 font-sans selection:bg-blue-100 selection:text-blue-900 overflow-hidden relative">
-      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
-          <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-blue-200/20 rounded-full blur-[100px]"></div>
-          <div className="absolute bottom-[-10%] left-[-5%] w-[600px] h-[600px] bg-indigo-200/20 rounded-full blur-[120px]"></div>
-      </div>
+    <AuthProvider>
+      <ProtectedRoute>
+        <div className="flex h-screen bg-[#F0F4F8] text-slate-900 font-sans selection:bg-blue-100 selection:text-blue-900 overflow-hidden relative">
+          <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
+              <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-blue-200/20 rounded-full blur-[100px]"></div>
+              <div className="absolute bottom-[-10%] left-[-5%] w-[600px] h-[600px] bg-indigo-200/20 rounded-full blur-[120px]"></div>
+          </div>
 
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
-      
-      <main className="ml-72 flex-1 relative h-full z-10">
-        <div className="absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-[#F0F4F8] to-transparent z-20 pointer-events-none"></div>
+          <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
 
-        <div className="h-full overflow-y-auto custom-scrollbar p-8">
-            <div className="max-w-[1440px] mx-auto min-h-full pb-20">
-                <AnimatePresence mode="wait">
-                    <motion.div
-                        key={activeTab}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        transition={{ duration: 0.2 }}
-                        className="h-full"
-                    >
-                        {renderContent()}
-                    </motion.div>
-                </AnimatePresence>
+          <main className="ml-72 flex-1 relative h-full z-10">
+            <div className="absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-[#F0F4F8] to-transparent z-20 pointer-events-none"></div>
+
+            <div className="h-full overflow-y-auto custom-scrollbar p-8">
+                <div className="max-w-[1440px] mx-auto min-h-full pb-20">
+                    <AnimatePresence mode="wait">
+                        <motion.div
+                            key={activeTab}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            transition={{ duration: 0.2 }}
+                            className="h-full"
+                        >
+                            {renderContent()}
+                        </motion.div>
+                    </AnimatePresence>
+                </div>
             </div>
-        </div>
-      </main>
+          </main>
 
-      <VoiceAssistant onAddCallLog={handleAddCallLog} />
-    </div>
+          <VoiceAssistant onAddCallLog={handleAddCallLog} />
+        </div>
+      </ProtectedRoute>
+    </AuthProvider>
   );
 };
 

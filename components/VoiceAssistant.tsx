@@ -2,7 +2,31 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Mic, MicOff, X, Zap, Loader2, Volume2 } from 'lucide-react';
 import { GoogleGenAI, LiveServerMessage, Modality, Type, FunctionDeclaration } from "@google/genai";
+import { supabase } from '@/lib/supabase';
 import { CallLog } from '../types';
+
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
+
+async function getGeminiEphemeralToken(config: object): Promise<string> {
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session) throw new Error('Usuário não autenticado')
+
+  const response = await fetch(`${SUPABASE_URL}/functions/v1/gemini-proxy`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${session.access_token}`,
+    },
+    body: JSON.stringify({ config }),
+  })
+
+  if (!response.ok) {
+    throw new Error('Falha ao obter token Gemini')
+  }
+
+  const data = await response.json()
+  return data.ephemeralToken
+}
 
 interface VoiceAssistantProps {
   onAddCallLog: (log: CallLog) => void;
@@ -69,15 +93,26 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onAddCallLog }) => {
   };
 
   const connectToGemini = async () => {
-    if (!import.meta.env.VITE_GEMINI_API_KEY) {
-        alert("API Key necessária para o Nexus Voice.");
-        return;
-    }
-
     setIsConnecting(true);
 
     try {
-        const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
+        const liveConfig = {
+            responseModalities: [Modality.AUDIO],
+            speechConfig: {
+                voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Kore' } }
+            },
+            tools: [{ functionDeclarations: [logCallTool] }],
+            systemInstruction: `Você é o Nexus Voice, assistente executivo para Carlos.
+
+            Ao registrar calls do "Mapa da Clareza", fique atento a dois perfis:
+            1. "Resgate": Endividado, precisa de dinheiro urgente (Indique Projeto Respirar).
+            2. "Transição": Estável financeiramente/CLT, quer liberdade (Indique Formação 3D).
+
+            Use a ferramenta log_sales_call quando solicitado. Fale português do Brasil.`,
+        }
+
+        const ephemeralToken = await getGeminiEphemeralToken(liveConfig)
+        const ai = new GoogleGenAI({ apiKey: ephemeralToken });
         
         // Setup Audio Contexts
         // Note: Using standard sample rate for output to match system usually works best, but 24000 is common for Gemini output.
@@ -91,23 +126,10 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onAddCallLog }) => {
         inputSourceRef.current = inputContext.createMediaStreamSource(streamRef.current);
         processorRef.current = inputContext.createScriptProcessor(4096, 1, 1);
         
-        // Connect Session
+        // Connect Session usando o token efêmero (API key permanente não chega ao browser)
         const sessionPromise = ai.live.connect({
             model: 'gemini-2.5-flash-native-audio-preview-12-2025',
-            config: {
-                responseModalities: [Modality.AUDIO],
-                speechConfig: {
-                    voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Kore' } }
-                },
-                tools: [{ functionDeclarations: [logCallTool] }],
-                systemInstruction: `Você é o Nexus Voice, assistente executivo para Carlos.
-                
-                Ao registrar calls do "Mapa da Clareza", fique atento a dois perfis:
-                1. "Resgate": Endividado, precisa de dinheiro urgente (Indique Projeto Respirar).
-                2. "Transição": Estável financeiramente/CLT, quer liberdade (Indique Formação 3D).
-                
-                Use a ferramenta log_sales_call quando solicitado. Fale português do Brasil.`,
-            },
+            config: liveConfig,
             callbacks: {
                 onopen: () => {
                     console.log("Nexus Voice Connected");

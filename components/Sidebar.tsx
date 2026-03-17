@@ -1,6 +1,7 @@
 
 import React from 'react';
-import { LayoutDashboard, Target, Users, Calendar, CheckSquare, BrainCircuit, Zap, Settings, PhoneCall, Megaphone, BookOpen, Command, ChevronRight, Layout } from 'lucide-react';
+import { LayoutDashboard, Target, Users, Calendar, CheckSquare, BrainCircuit, Zap, Settings, PhoneCall, Megaphone, BookOpen, Command, ChevronRight, Layout, LogOut } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 interface SidebarProps {
   activeTab: string;
@@ -48,8 +49,8 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
       </nav>
 
       {/* Footer Area - Connected User */}
-      <div className="p-6">
-        <div className="bg-white/5 rounded-3xl p-4 border border-white/5 hover:bg-white/10 transition-all cursor-pointer group">
+      <div className="p-6 space-y-2">
+        <div className="bg-white/5 rounded-3xl p-4 border border-white/5">
           <div className="flex items-center gap-3">
              <div className="h-10 w-10 rounded-2xl bg-blue-600 flex items-center justify-center text-white font-black text-sm shadow-xl ring-2 ring-blue-500/20">CS</div>
              <div className="flex-1 min-w-0">
@@ -59,6 +60,13 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
              <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"></div>
           </div>
         </div>
+        <button
+          onClick={() => supabase.auth.signOut()}
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-all text-xs font-bold"
+        >
+          <LogOut size={16} />
+          Sair
+        </button>
       </div>
     </div>
   );
