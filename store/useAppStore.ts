@@ -1,6 +1,12 @@
 import { create } from 'zustand'
-import { supabase } from '@/lib/supabase'
 import type { Lead, Task, CalendarEvent, CallLog, OKR, Post } from '@/types'
+import { leadsService } from '@/services/leadsService'
+import { tasksService } from '@/services/tasksService'
+import { eventsService } from '@/services/eventsService'
+import { callLogsService } from '@/services/callLogsService'
+import { okrsService } from '@/services/okrsService'
+import { contentPostsService } from '@/services/contentPostsService'
+import { storeMetricsService } from '@/services/storeMetricsService'
 
 export interface StoreMetric {
   id?: string
@@ -57,72 +63,40 @@ export const useAppStore = create<AppState>((set, get) => ({
   error: null,
 
   fetchLeads: async () => {
-    const { data, error } = await supabase
-      .from('leads').select('*').order('created_at', { ascending: false })
-    if (!error && data) {
-      set({ leads: data.map((l: any) => ({
-        id: l.id, name: l.name, email: l.email, source: l.source,
-        status: l.status, value: l.value, product: l.product, createdAt: l.created_at
-      }))})
-    }
+    const { data } = await leadsService.getAll()
+    if (data) set({ leads: data })
   },
 
   fetchTasks: async () => {
-    const { data, error } = await supabase
-      .from('tasks').select('*').order('created_at', { ascending: false })
-    if (!error && data) {
-      set({ tasks: data.map((t: any) => ({
-        id: t.id, title: t.title, type: t.type, completed: t.completed, category: t.category
-      }))})
-    }
+    const { data } = await tasksService.getAll()
+    if (data) set({ tasks: data })
   },
 
   fetchEvents: async () => {
-    const { data, error } = await supabase
-      .from('events').select('*').order('start_time', { ascending: true })
-    if (!error && data) {
-      set({ events: data.map((e: any) => ({
-        id: e.id, title: e.title, start: e.start_time, end: e.end_time,
-        type: e.type, attendees: e.attendees, dayOffset: e.day_offset
-      }))})
-    }
+    const { data } = await eventsService.getAll()
+    if (data) set({ events: data })
   },
 
   fetchCallLogs: async () => {
-    const { data, error } = await supabase
-      .from('call_logs').select('*').order('created_at', { ascending: false })
-    if (!error && data) {
-      set({ callLogs: data.map((c: any) => ({
-        id: c.id, leadName: c.lead_name, date: c.date, duration: c.duration,
-        type: c.type, status: c.status, sentiment: c.sentiment,
-        transcriptSnippet: c.transcript_snippet, summary: c.summary
-      }))})
-    }
+    const { data } = await callLogsService.getAll()
+    if (data) set({ callLogs: data })
   },
 
   fetchOkrs: async () => {
-    const { data, error } = await supabase
-      .from('okrs').select('*').order('created_at', { ascending: true })
-    if (!error && data) {
-      set({ okrs: data.map((o: any) => ({
-        id: o.id, unit: o.unit, objective: o.objective,
-        progress: o.progress, keyResults: o.key_results
-      }))})
-    }
+    const { data } = await okrsService.getAll()
+    if (data) set({ okrs: data })
   },
 
   fetchContentPosts: async () => {
-    const { data, error } = await supabase
-      .from('content_posts').select('*').order('created_at', { ascending: false })
-    if (!error && data) set({ contentPosts: data })
+    const { data } = await contentPostsService.getAll()
+    if (data) set({ contentPosts: data })
   },
 
   fetchStoreMetrics: async () => {
     const now = new Date()
     const firstDayOfMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
-    const { data, error } = await supabase
-      .from('store_metrics').select('*').gte('date', firstDayOfMonth).order('date', { ascending: false })
-    if (!error && data) set({ storeMetrics: data })
+    const { data } = await storeMetricsService.getByDateRange(firstDayOfMonth)
+    if (data) set({ storeMetrics: data })
   },
 
   fetchAll: async () => {
