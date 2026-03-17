@@ -1,6 +1,7 @@
 
 
 import React, { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import StatCard from '../components/StatCard';
 import { supabase } from '../lib/supabase';
 import { Store, Calculator, Loader2, Save, Zap, Check, TrendingUp, ShieldCheck, Target, Layers, Globe, ArrowRight, Bell, Sparkles, ChevronRight } from 'lucide-react';
@@ -33,12 +34,12 @@ interface DashboardProps {
     tasks: Task[];
     leads: Lead[];
     events: CalendarEvent[];
-    setActiveTab: (tab: string) => void;
     storeMetrics: StoreMetric[];
     isLoading: boolean;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ tasks, leads, events, setActiveTab, storeMetrics, isLoading }) => {
+const Dashboard: React.FC<DashboardProps> = ({ tasks, leads, events, storeMetrics, isLoading }) => {
+  const navigate = useNavigate();
   const [activeUnit, setActiveUnit] = useState<MainUnit>('Overview');
   const [isSavingMetric, setIsSavingMetric] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -277,7 +278,7 @@ const Dashboard: React.FC<DashboardProps> = ({ tasks, leads, events, setActiveTa
                               <p className="text-[9px] font-black text-slate-400 uppercase mb-2">Diagnósticos Pagos (Mapa)</p>
                               <p className="text-3xl font-black text-indigo-600">{leads3D.filter(l => l.product === 'Mapa da Clareza').length}</p>
                           </div>
-                          <button onClick={() => setActiveTab('pipeline')} className="w-full py-5 bg-slate-900 text-white rounded-3xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-600 transition-all shadow-xl">Ver Pipeline Completo</button>
+                          <button onClick={() => navigate('/pipeline')} className="w-full py-5 bg-slate-900 text-white rounded-3xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-600 transition-all shadow-xl">Ver Pipeline Completo</button>
                       </div>
                   </div>
                   <div className="lg:col-span-8 bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-xl">
