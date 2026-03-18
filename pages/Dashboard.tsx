@@ -1,10 +1,11 @@
 
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import StatCard from '../components/StatCard';
 import { storeMetricsService } from '../services/storeMetricsService';
-import { Store, Calculator, Loader2, Save, Zap, Check, TrendingUp, ShieldCheck, Target, Layers, Globe, ArrowRight, Bell, Sparkles, ChevronRight } from 'lucide-react';
+import { shopifyService, ShopifyOrder } from '../services/shopifyService';
+import { Store, Calculator, Loader2, Save, Zap, Check, TrendingUp, ShieldCheck, Target, Layers, Globe, ArrowRight, Bell, Sparkles, ChevronRight, RefreshCw } from 'lucide-react';
 import { LeadStatus } from '../types';
 import { useAppStore } from '../store/useAppStore';
 
@@ -29,6 +30,7 @@ interface StoreStats {
     color: string;
     bg: string;
     isMain: boolean;
+    isLive?: boolean;
 }
 
 const Dashboard: React.FC = () => {
@@ -45,36 +47,102 @@ const Dashboard: React.FC = () => {
       date: new Date().toLocaleDateString('en-CA')
   });
 
+  // ── Shopify live state ────────────────────────────────────────────────────
+  const [morielOrders, setMorielOrders] = useState<ShopifyOrder[]>([]);
+  const [morielLoading, setMorielLoading] = useState(false);
+  const [morielLastSync, setMorielLastSync] = useState<Date | null>(null);
+
+  const [vcchicOrders, setVcchicOrders] = useState<ShopifyOrder[]>([]);
+  const [vcchicLoading, setVcchicLoading] = useState(false);
+  const [vcchicLastSync, setVcchicLastSync] = useState<Date | null>(null);
+
+  const [sezoOrders, setSezoOrders] = useState<ShopifyOrder[]>([]);
+  const [sezoLoading, setSezoLoading] = useState(false);
+  const [sezoLastSync, setSezoLastSync] = useState<Date | null>(null);
+
+  const loadMorielOrders = useCallback(async () => {
+    setMorielLoading(true);
+    const { data } = await shopifyService.getLiveOrders('moriel');
+    setMorielOrders(data);
+    setMorielLastSync(new Date());
+    setMorielLoading(false);
+  }, []);
+
+  const loadVcchicOrders = useCallback(async () => {
+    setVcchicLoading(true);
+    const { data } = await shopifyService.getLiveOrders('vcchic');
+    setVcchicOrders(data);
+    setVcchicLastSync(new Date());
+    setVcchicLoading(false);
+  }, []);
+
+  const loadSezoOrders = useCallback(async () => {
+    setSezoLoading(true);
+    const { data } = await shopifyService.getLiveOrders('sezo');
+    setSezoOrders(data);
+    setSezoLastSync(new Date());
+    setSezoLoading(false);
+  }, []);
+
+  useEffect(() => {
+    loadMorielOrders();
+    loadVcchicOrders();
+    loadSezoOrders();
+    const interval = setInterval(() => {
+      loadMorielOrders();
+      loadVcchicOrders();
+      loadSezoOrders();
+    }, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [loadMorielOrders, loadVcchicOrders, loadSezoOrders]);
+
   // Data processing for Grupo VcChic
   const performanceData = useMemo<Record<string, StoreStats>>(() => {
-      const todayStr = new Date().toLocaleDateString('en-CA');
+      const now = new Date();
+      const monthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+      const todayStr = `${monthStr}-${String(now.getDate()).padStart(2, '0')}`;
+      const liveStores = new Set(['vcchic', 'sezo', 'moriel']);
+
       const stores: Record<string, StoreStats> = {
-          vcchic: { name: 'VcChic', mtdSales: 0, todaySales: 0, mtdSpend: 0, todaySpend: 0, roas: 0, color: 'text-blue-600', bg: 'bg-blue-50', isMain: true },
-          mivave: { name: 'Mivave', mtdSales: 0, todaySales: 0, mtdSpend: 0, todaySpend: 0, roas: 0, color: 'text-purple-600', bg: 'bg-purple-50', isMain: false },
-          sezo: { name: 'Sezo', mtdSales: 0, todaySales: 0, mtdSpend: 0, todaySpend: 0, roas: 0, color: 'text-orange-600', bg: 'bg-orange-50', isMain: false },
-          moriel: { name: 'Moriel', mtdSales: 0, todaySales: 0, mtdSpend: 0, todaySpend: 0, roas: 0, color: 'text-teal-600', bg: 'bg-teal-50', isMain: false }
+          vcchic: { name: 'VcChic', mtdSales: 0, todaySales: 0, mtdSpend: 0, todaySpend: 0, roas: 0, color: 'text-blue-600', bg: 'bg-blue-50', isMain: true,  isLive: true  },
+          mivave: { name: 'Mivave', mtdSales: 0, todaySales: 0, mtdSpend: 0, todaySpend: 0, roas: 0, color: 'text-purple-600', bg: 'bg-purple-50', isMain: false, isLive: false },
+          sezo:   { name: 'Sezo',   mtdSales: 0, todaySales: 0, mtdSpend: 0, todaySpend: 0, roas: 0, color: 'text-orange-600', bg: 'bg-orange-50', isMain: false, isLive: true  },
+          moriel: { name: 'Moriel', mtdSales: 0, todaySales: 0, mtdSpend: 0, todaySpend: 0, roas: 0, color: 'text-teal-600', bg: 'bg-teal-50', isMain: false, isLive: true  }
       };
 
+      // Supabase: spend para todas; vendas manuais só para Mivave
       storeMetrics.forEach(m => {
           const storeKey = m.store_name.trim().toLowerCase();
           const store = stores[storeKey];
-          if (store) {
+          if (!store) return;
+          const spVal = Number(m.spend) || 0;
+          store.mtdSpend += spVal;
+          if (m.date.split('T')[0] === todayStr) store.todaySpend += spVal;
+          if (!liveStores.has(storeKey)) {
               const sVal = Number(m.sales) || 0;
-              const spVal = Number(m.spend) || 0;
               store.mtdSales += sVal;
-              store.mtdSpend += spVal;
-              if (m.date.split('T')[0] === todayStr) {
-                  store.todaySales += sVal;
-                  store.todaySpend += spVal;
-              }
+              if (m.date.split('T')[0] === todayStr) store.todaySales += sVal;
           }
       });
+
+      // Shopify live: substitui vendas com dados reais (string comparison para evitar bugs de fuso)
+      const vcchicPaid = vcchicOrders.filter(o => o.financial_status === 'paid');
+      stores.vcchic.mtdSales   = vcchicPaid.filter(o => o.created_at.slice(0, 7) === monthStr).reduce((a, o) => a + parseFloat(o.total_price), 0);
+      stores.vcchic.todaySales = vcchicPaid.filter(o => o.created_at.slice(0, 10) === todayStr).reduce((a, o) => a + parseFloat(o.total_price), 0);
+
+      const sezoPaid = sezoOrders.filter(o => o.financial_status === 'paid');
+      stores.sezo.mtdSales   = sezoPaid.filter(o => o.created_at.slice(0, 7) === monthStr).reduce((a, o) => a + parseFloat(o.total_price), 0);
+      stores.sezo.todaySales = sezoPaid.filter(o => o.created_at.slice(0, 10) === todayStr).reduce((a, o) => a + parseFloat(o.total_price), 0);
+
+      const morielPaid = morielOrders.filter(o => o.financial_status === 'paid');
+      stores.moriel.mtdSales   = morielPaid.filter(o => o.created_at.slice(0, 7) === monthStr).reduce((a, o) => a + parseFloat(o.total_price), 0);
+      stores.moriel.todaySales = morielPaid.filter(o => o.created_at.slice(0, 10) === todayStr).reduce((a, o) => a + parseFloat(o.total_price), 0);
 
       Object.values(stores).forEach((s: StoreStats) => {
         s.roas = s.mtdSpend > 0 ? s.mtdSales / s.mtdSpend : 0;
       });
       return stores;
-  }, [storeMetrics]);
+  }, [storeMetrics, vcchicOrders, sezoOrders, morielOrders]);
 
   // Derived Values
   // Fix: Explicitly cast the result of Object.values to StoreStats[] to resolve potential 'unknown' type inference issues.
@@ -341,8 +409,19 @@ const Dashboard: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Lista de Performance por Loja Restaurada */}
+                    {/* Lista de Performance por Loja */}
                     <div className="lg:col-span-7 space-y-4 overflow-y-auto max-h-[500px] pr-2 custom-scrollbar">
+                        <div className="flex items-center justify-between px-1 mb-2">
+                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Performance por Loja</span>
+                            <button
+                                onClick={() => { loadVcchicOrders(); loadSezoOrders(); loadMorielOrders(); }}
+                                disabled={vcchicLoading || sezoLoading || morielLoading}
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-emerald-50 hover:text-emerald-600 text-slate-400 transition-all text-[9px] font-black uppercase"
+                            >
+                                <RefreshCw size={10} className={(vcchicLoading || sezoLoading || morielLoading) ? 'animate-spin' : ''} />
+                                {(vcchicLoading || sezoLoading || morielLoading) ? 'Atualizando...' : 'Shopify Live'}
+                            </button>
+                        </div>
                         {(Object.entries(performanceData) as [string, StoreStats][]).map(([id, store]) => (
                             <div key={id} className={`bg-white rounded-[2rem] p-6 border shadow-lg flex items-center justify-between transition-all group ${store.isMain ? 'ring-2 ring-blue-50' : 'border-slate-100'}`}>
                                 <div className="flex items-center gap-5">
@@ -351,7 +430,14 @@ const Dashboard: React.FC = () => {
                                     </div>
                                     <div>
                                         <h4 className="font-black text-slate-900 text-lg uppercase tracking-tight">{store.name}</h4>
-                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Performance MTD</p>
+                                        {store.isLive ? (
+                                            <div className="flex items-center gap-1 mt-0.5">
+                                                <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                                                <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Shopify · Tempo Real</p>
+                                            </div>
+                                        ) : (
+                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Performance MTD</p>
+                                        )}
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-8">
