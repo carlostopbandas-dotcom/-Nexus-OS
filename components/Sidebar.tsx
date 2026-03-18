@@ -49,7 +49,7 @@ const Sidebar: React.FC = () => {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-4 space-y-1 overflow-y-auto custom-scrollbar">
+      <nav aria-label="Navegação principal" className="flex-1 px-4 space-y-1 overflow-y-auto custom-scrollbar">
         <p className="px-4 text-[9px] font-black text-slate-600 uppercase tracking-widest mb-3 mt-4">Command</p>
         {menuItems.slice(0, 3).map((item) => renderMenuItem(item, isActive, navigate))}
 

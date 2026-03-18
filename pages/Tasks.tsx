@@ -305,12 +305,13 @@ const Tasks: React.FC = () => {
                   <div className="p-3 bg-slate-900 text-white rounded-2xl shadow-lg">
                       {isClassifying ? <Loader2 size={24} className="animate-spin" /> : <Plus size={24} />}
                   </div>
-                  <input 
+                  <input
                     type="text"
                     value={newTaskInput}
                     onChange={(e) => setNewTaskInput(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSmartAdd()}
                     placeholder="O que o CEO precisa resolver agora? (A IA prioriza p/ você)"
+                    aria-label="Nova tarefa"
                     className="flex-1 h-14 bg-transparent outline-none text-lg font-bold text-slate-800 placeholder-slate-300"
                   />
                   <button 

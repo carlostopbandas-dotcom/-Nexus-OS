@@ -243,15 +243,15 @@ const Routine: React.FC = () => {
 
                             {viewMode === 'ideal' && editingIdx === idx ? (
                                 <div className="flex items-center gap-2 mb-5 flex-wrap">
-                                    <input type="time" value={editForm.startTime} onChange={e => setEditForm(f => ({ ...f, startTime: e.target.value }))} className="text-xs font-mono font-black bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:border-blue-400" />
+                                    <input type="time" aria-label="Horário de início" value={editForm.startTime} onChange={e => setEditForm(f => ({ ...f, startTime: e.target.value }))} className="text-xs font-mono font-black bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:border-blue-400" />
                                     <span className="text-slate-300 font-bold text-xs">–</span>
-                                    <input type="time" value={editForm.endTime} onChange={e => setEditForm(f => ({ ...f, endTime: e.target.value }))} className="text-xs font-mono font-black bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:border-blue-400" />
-                                    <input type="text" value={editForm.activity} onChange={e => setEditForm(f => ({ ...f, activity: e.target.value }))} className="text-xs font-black bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:border-blue-400 flex-1 min-w-[140px]" placeholder="Atividade" />
+                                    <input type="time" aria-label="Horário de término" value={editForm.endTime} onChange={e => setEditForm(f => ({ ...f, endTime: e.target.value }))} className="text-xs font-mono font-black bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:border-blue-400" />
+                                    <input type="text" aria-label="Nome da atividade" value={editForm.activity} onChange={e => setEditForm(f => ({ ...f, activity: e.target.value }))} className="text-xs font-black bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:border-blue-400 flex-1 min-w-[140px]" placeholder="Atividade" />
                                     <select value={editForm.type} onChange={e => setEditForm(f => ({ ...f, type: e.target.value as ScheduleBlock['type'] }))} className="text-xs font-black bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:border-blue-400">
                                         {(['Deep Work', 'Health', 'Meeting', 'Rest', 'Learning'] as const).map(t => <option key={t} value={t}>{t}</option>)}
                                     </select>
-                                    <button onClick={saveEdit} className="p-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl transition-all shadow-md"><Check size={14} /></button>
-                                    <button onClick={() => setEditingIdx(null)} className="p-2 bg-slate-200 hover:bg-slate-300 text-slate-600 rounded-xl transition-all"><X size={14} /></button>
+                                    <button onClick={saveEdit} aria-label="Salvar edição" className="p-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl transition-all shadow-md"><Check size={14} /></button>
+                                    <button onClick={() => setEditingIdx(null)} aria-label="Cancelar edição" className="p-2 bg-slate-200 hover:bg-slate-300 text-slate-600 rounded-xl transition-all"><X size={14} /></button>
                                 </div>
                             ) : (
                                 <div className="flex items-center gap-4 mb-5">
@@ -261,8 +261,8 @@ const Routine: React.FC = () => {
                                     }`}>{block.activity}</span>
                                     {viewMode === 'ideal' && (
                                         <div className="ml-auto flex items-center gap-1">
-                                            <button onClick={() => startEdit(idx)} className="p-1.5 text-slate-300 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-all"><Pencil size={14} /></button>
-                                            <button onClick={() => deleteBlock(idx)} className="p-1.5 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all"><Trash2 size={14} /></button>
+                                            <button onClick={() => startEdit(idx)} aria-label="Editar bloco" className="p-1.5 text-slate-300 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-all"><Pencil size={14} /></button>
+                                            <button onClick={() => deleteBlock(idx)} aria-label="Excluir bloco" className="p-1.5 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all"><Trash2 size={14} /></button>
                                         </div>
                                     )}
                                 </div>
@@ -288,6 +288,7 @@ const Routine: React.FC = () => {
                                                 </div>
                                                 <button 
                                                     onClick={() => handleDeleteEvent(ev.id)}
+                                                    aria-label="Excluir evento"
                                                     className="p-2 text-slate-200 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all"
                                                 >
                                                     {deletingId === ev.id ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
@@ -310,15 +311,15 @@ const Routine: React.FC = () => {
                     <div className="pt-2 space-y-3">
                         {showAddForm ? (
                             <div className="bg-white border border-blue-100 rounded-2xl p-5 flex items-center gap-2 flex-wrap shadow-sm">
-                                <input type="time" value={addForm.startTime} onChange={e => setAddForm(f => ({ ...f, startTime: e.target.value }))} className="text-xs font-mono font-black bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:border-blue-400" />
+                                <input type="time" aria-label="Horário de início" value={addForm.startTime} onChange={e => setAddForm(f => ({ ...f, startTime: e.target.value }))} className="text-xs font-mono font-black bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:border-blue-400" />
                                 <span className="text-slate-300 font-bold text-xs">–</span>
-                                <input type="time" value={addForm.endTime} onChange={e => setAddForm(f => ({ ...f, endTime: e.target.value }))} className="text-xs font-mono font-black bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:border-blue-400" />
-                                <input type="text" value={addForm.activity} onChange={e => setAddForm(f => ({ ...f, activity: e.target.value }))} className="text-xs font-black bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:border-blue-400 flex-1 min-w-[140px]" placeholder="Nome da atividade" />
+                                <input type="time" aria-label="Horário de término" value={addForm.endTime} onChange={e => setAddForm(f => ({ ...f, endTime: e.target.value }))} className="text-xs font-mono font-black bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:border-blue-400" />
+                                <input type="text" aria-label="Nome da atividade" value={addForm.activity} onChange={e => setAddForm(f => ({ ...f, activity: e.target.value }))} className="text-xs font-black bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:border-blue-400 flex-1 min-w-[140px]" placeholder="Nome da atividade" />
                                 <select value={addForm.type} onChange={e => setAddForm(f => ({ ...f, type: e.target.value as ScheduleBlock['type'] }))} className="text-xs font-black bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:border-blue-400">
                                     {(['Deep Work', 'Health', 'Meeting', 'Rest', 'Learning'] as const).map(t => <option key={t} value={t}>{t}</option>)}
                                 </select>
-                                <button onClick={addBlock} className="p-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl transition-all shadow-md"><Check size={14} /></button>
-                                <button onClick={() => setShowAddForm(false)} className="p-2 bg-slate-200 hover:bg-slate-300 text-slate-600 rounded-xl transition-all"><X size={14} /></button>
+                                <button onClick={addBlock} aria-label="Confirmar adição" className="p-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl transition-all shadow-md"><Check size={14} /></button>
+                                <button onClick={() => setShowAddForm(false)} aria-label="Cancelar" className="p-2 bg-slate-200 hover:bg-slate-300 text-slate-600 rounded-xl transition-all"><X size={14} /></button>
                             </div>
                         ) : (
                             <button onClick={() => setShowAddForm(true)} className="w-full flex items-center justify-center gap-2 p-4 border-2 border-dashed border-slate-200 rounded-2xl text-slate-400 hover:border-blue-400 hover:text-blue-500 transition-all text-xs font-black uppercase tracking-widest">

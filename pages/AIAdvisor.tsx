@@ -394,8 +394,9 @@ const AIAdvisor: React.FC = () => {
             </div>
 
             {/* Modern Upload Button */}
-             <input 
-                type="file" 
+             <input
+                type="file"
+                aria-label="Anexar arquivo para análise"
                 ref={fileInputRef}
                 onChange={handleFileSelect}
                 className="hidden"

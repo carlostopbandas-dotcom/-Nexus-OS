@@ -263,19 +263,19 @@ const Calls: React.FC = () => {
                       <div className="grid grid-cols-2 gap-6">
                           <div>
                               <label className="block text-[10px] font-black text-slate-400 uppercase mb-2 tracking-widest">Data do Evento</label>
-                              <input type="date" value={newCall.date} onChange={(e) => setNewCall({...newCall, date: e.target.value})} className="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm focus:ring-2 focus:ring-blue-500/20 focus:outline-none" />
+                              <input type="date" aria-label="Data do evento" value={newCall.date} onChange={(e) => setNewCall({...newCall, date: e.target.value})} className="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm focus:ring-2 focus:ring-blue-500/20 focus:outline-none" />
                           </div>
                           <div>
                               <label className="block text-[10px] font-black text-slate-400 uppercase mb-2 tracking-widest">Hora de Início</label>
-                              <input type="time" value={newCall.time} onChange={(e) => setNewCall({...newCall, time: e.target.value})} className="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm focus:ring-2 focus:ring-blue-500/20 focus:outline-none" />
+                              <input type="time" aria-label="Hora de início" value={newCall.time} onChange={(e) => setNewCall({...newCall, time: e.target.value})} className="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm focus:ring-2 focus:ring-blue-500/20 focus:outline-none" />
                           </div>
                       </div>
 
                       <div className="relative">
                           <label className="block text-[10px] font-black text-slate-400 uppercase mb-2 tracking-widest">Vincular Lead do CRM</label>
                           <div className="relative">
-                            <input 
-                                type="text" value={leadSearch} onFocus={() => setIsLeadDropdownOpen(true)}
+                            <input
+                                type="text" aria-label="Buscar lead do CRM" value={leadSearch} onFocus={() => setIsLeadDropdownOpen(true)}
                                 onChange={(e) => { setLeadSearch(e.target.value); setIsLeadDropdownOpen(true); }}
                                 placeholder="Buscar nome..." className="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
                             />

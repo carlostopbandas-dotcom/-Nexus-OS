@@ -44,7 +44,7 @@ const AppContent: React.FC = () => {
 
       <Sidebar />
 
-      <main className="ml-72 flex-1 relative h-full z-10">
+      <main role="main" className="ml-72 flex-1 relative h-full z-10">
         <div className="absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-[#F0F4F8] to-transparent z-20 pointer-events-none"></div>
 
         <div className="h-full overflow-y-auto custom-scrollbar p-8">

@@ -285,8 +285,9 @@ Utilize este conhecimento para otimizar processos na VcChic ou na Escola 3D, bus
                     <div className="flex gap-2 bg-white/10 p-1.5 rounded-xl border border-white/20 backdrop-blur-sm shadow-inner">
                         <div className="flex-1 flex items-center px-3 gap-3">
                             <Search className="text-indigo-200" size={20} />
-                            <input 
-                                type="text" 
+                            <input
+                                type="text"
+                                aria-label="Tópico de estudo"
                                 value={customTopic}
                                 onChange={(e) => setCustomTopic(e.target.value)}
                                 onKeyDown={(e) => e.key === 'Enter' && handleCustomStudy()}
@@ -296,8 +297,9 @@ Utilize este conhecimento para otimizar processos na VcChic ou na Escola 3D, bus
                         </div>
                         
                         {/* File Upload Button */}
-                        <input 
-                            type="file" 
+                        <input
+                            type="file"
+                            aria-label="Anexar arquivo"
                             ref={fileInputRef}
                             onChange={handleFileSelect}
                             className="hidden"
