@@ -14,6 +14,9 @@ import AIAdvisor from './pages/AIAdvisor';
 import Calls from './pages/Calls';
 import ContentMachine from './pages/ContentMachine';
 import KnowledgeHub from './pages/KnowledgeHub';
+import ShopifyPage from './pages/Shopify';
+import VcChicPage from './pages/VcChicPage';
+import SezoPage from './pages/SezoPage';
 import VoiceAssistant from './components/VoiceAssistant';
 import { useAppStore } from './store/useAppStore';
 import type { CallLog } from './types';
@@ -70,6 +73,9 @@ const AppContent: React.FC = () => {
                     <Route path="/routine" element={<Routine />} />
                     <Route path="/tasks" element={<Tasks />} />
                     <Route path="/ai" element={<AIAdvisor />} />
+                    <Route path="/shopify" element={<ShopifyPage />} />
+                    <Route path="/vcchic" element={<VcChicPage />} />
+                    <Route path="/sezo" element={<SezoPage />} />
                     <Route path="*" element={<Dashboard />} />
                   </Routes>
                 </motion.div>
