@@ -8,6 +8,7 @@ import { eventsService } from '../services/eventsService';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import { useAppStore } from '../store/useAppStore';
+import { toast } from 'sonner';
 
 const Calls: React.FC = () => {
   const { callLogs, setCallLogs, removeCallLog, addCallLog, leads } = useAppStore();
@@ -66,7 +67,7 @@ const Calls: React.FC = () => {
           setSelectedCall(null);
       } catch (e) {
           console.error("Erro crítico na exclusão:", e);
-          alert("Não foi possível excluir o registro. Verifique sua conexão.");
+          toast.error("Não foi possível excluir o registro. Verifique sua conexão.");
       } finally {
           setIsDeleting(false);
       }

@@ -6,7 +6,9 @@ import { leadsService } from '../services/leadsService';
 import { eventsService } from '../services/eventsService';
 import { callLogsService } from '../services/callLogsService';
 import { Plus, Clock, X, Save, Loader2, Sparkles, Thermometer, Zap, Check, ChevronLeft, ChevronRight, Search } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
+import { toast } from 'sonner';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 
 const Pipeline: React.FC = () => {
   const { leads, addLead, updateLead, addEvent, addCallLog } = useAppStore();
@@ -46,7 +48,7 @@ const Pipeline: React.FC = () => {
       const { error } = await leadsService.update(leadId, { status: newStatus });
       if (error && originalStatus) {
           updateLead(leadId, { status: originalStatus });
-          alert("Erro ao mover lead. Sincronização falhou.");
+          toast.error("Erro ao mover lead. Sincronização falhou.");
       }
   };
 
@@ -66,7 +68,7 @@ const Pipeline: React.FC = () => {
           if (data) addLead(data);
           setIsModalOpen(false);
           setNewLead({ name: '', email: '', product: 'Nexus', source: 'Organic', value: 0, status: LeadStatus.NEW });
-      } catch (err) { alert("Erro ao salvar lead. Verifique os dados e sua conexão."); } finally { setIsSaving(false); }
+      } catch (err) { toast.error("Erro ao salvar lead. Verifique os dados e sua conexão."); } finally { setIsSaving(false); }
   };
 
   const handleQuickSchedule = async () => {
@@ -110,7 +112,7 @@ const Pipeline: React.FC = () => {
           setIsScheduleModalOpen(false);
           setSelectedLead(null);
       } catch (e) {
-          alert("Falha ao sincronizar com o ecossistema.");
+          toast.error("Falha ao sincronizar com o ecossistema.");
       } finally {
           setIsSaving(false);
       }
@@ -255,92 +257,84 @@ const Pipeline: React.FC = () => {
         </div>
       </div>
 
-      <AnimatePresence>
-        {isModalOpen && (
-            <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[110] flex items-center justify-center p-4">
-                <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} className="bg-white rounded-[3rem] shadow-[0_30px_100px_rgba(0,0,0,0.2)] w-full max-w-xl overflow-hidden border border-slate-100">
-                    <div className="p-10 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
-                        <div className="flex items-center gap-3">
-                            <div className="p-3 bg-blue-600 text-white rounded-2xl"><Sparkles size={20} /></div>
-                            <h3 className="font-black text-slate-900 text-2xl tracking-tighter uppercase italic">Inject <span className="text-blue-600">Lead</span></h3>
-                        </div>
-                        <button onClick={() => setIsModalOpen(false)} className="p-3 hover:bg-slate-200 rounded-2xl transition-all"><X size={24} /></button>
-                    </div>
-                    <div className="p-10 space-y-6">
-                        <div className="space-y-2">
-                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-2">Identificação do Cliente</label>
-                            <input type="text" placeholder="Nome Completo" value={newLead.name} onChange={(e) => setNewLead({...newLead, name: e.target.value})} className="w-full px-6 py-5 bg-slate-50 border border-slate-100 rounded-[1.5rem] font-bold text-sm outline-none focus:ring-4 focus:ring-blue-500/5 transition-all" />
-                        </div>
-                        <div className="grid grid-cols-2 gap-6">
-                            <div className="space-y-2">
-                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-2">Produto Principal</label>
-                                <select value={newLead.product} onChange={(e) => setNewLead({...newLead, product: e.target.value as any})} className="w-full px-6 py-5 bg-slate-50 border border-slate-100 rounded-[1.5rem] font-bold text-xs uppercase outline-none">
-                                    <option value="Nexus">Nexus</option>
-                                    <option value="Mapa da Clareza">Mapa da Clareza</option>
-                                    <option value="Formação 3D">Formação 3D</option>
-                                    <option value="Projeto Respirar">Projeto Respirar</option>
-                                </select>
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-2">Valor de Pipeline (R$)</label>
-                                <input type="number" placeholder="0" value={newLead.value} onChange={(e) => setNewLead({...newLead, value: Number(e.target.value)})} className="w-full px-6 py-5 bg-slate-50 border border-slate-100 rounded-[1.5rem] font-bold text-sm outline-none" />
-                            </div>
-                        </div>
-                    </div>
-                    <div className="p-10 bg-slate-50/50 flex gap-4">
-                        <button onClick={handleSaveLead} disabled={isSaving || !newLead.name} className="flex-1 py-6 bg-slate-900 text-white rounded-[1.5rem] font-black text-[11px] uppercase tracking-[0.2em] shadow-2xl hover:bg-blue-600 transition-all flex items-center justify-center gap-3">
-                            {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
-                            Sync to Cloud
-                        </button>
-                    </div>
-                </motion.div>
+      {/* Modal: Inject Lead — shadcn Dialog (FocusTrap + ESC nativos via Radix) */}
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="rounded-[3rem] max-w-xl p-0 overflow-hidden shadow-[0_30px_100px_rgba(0,0,0,0.2)]">
+          <div className="p-10 border-b border-slate-50 flex items-center gap-3 bg-slate-50/50">
+            <div className="p-3 bg-blue-600 text-white rounded-2xl"><Sparkles size={20} /></div>
+            <h3 className="font-black text-slate-900 text-2xl tracking-tighter uppercase italic">Inject <span className="text-blue-600">Lead</span></h3>
+          </div>
+          <div className="p-10 space-y-6">
+            <div className="space-y-2">
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-2">Identificação do Cliente</label>
+              <input type="text" placeholder="Nome Completo" value={newLead.name} onChange={(e) => setNewLead({...newLead, name: e.target.value})} className="w-full px-6 py-5 bg-slate-50 border border-slate-100 rounded-[1.5rem] font-bold text-sm outline-none focus:ring-4 focus:ring-blue-500/5 transition-all" aria-label="Nome do lead" />
             </div>
-        )}
+            <div className="grid grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-2">Produto Principal</label>
+                <select value={newLead.product} onChange={(e) => setNewLead({...newLead, product: e.target.value as any})} className="w-full px-6 py-5 bg-slate-50 border border-slate-100 rounded-[1.5rem] font-bold text-xs uppercase outline-none" aria-label="Produto principal">
+                  <option value="Nexus">Nexus</option>
+                  <option value="Mapa da Clareza">Mapa da Clareza</option>
+                  <option value="Formação 3D">Formação 3D</option>
+                  <option value="Projeto Respirar">Projeto Respirar</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-2">Valor de Pipeline (R$)</label>
+                <input type="number" placeholder="0" value={newLead.value} onChange={(e) => setNewLead({...newLead, value: Number(e.target.value)})} className="w-full px-6 py-5 bg-slate-50 border border-slate-100 rounded-[1.5rem] font-bold text-sm outline-none" aria-label="Valor do pipeline" />
+              </div>
+            </div>
+          </div>
+          <div className="p-10 bg-slate-50/50 flex gap-4">
+            <button onClick={handleSaveLead} disabled={isSaving || !newLead.name} className="flex-1 py-6 bg-slate-900 text-white rounded-[1.5rem] font-black text-[11px] uppercase tracking-[0.2em] shadow-2xl hover:bg-blue-600 transition-all flex items-center justify-center gap-3">
+              {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
+              Sync to Cloud
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
-        {isScheduleModalOpen && selectedLead && (
-            <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-lg z-[120] flex items-center justify-center p-4">
-                <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-white rounded-[3rem] shadow-2xl w-full max-w-lg overflow-hidden border border-slate-100">
-                    <div className="p-8 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
-                        <div className="flex items-center gap-3">
-                            <div className="p-3 bg-blue-600 text-white rounded-2xl"><Zap size={20} /></div>
-                            <div>
-                                <h3 className="font-black text-slate-900 text-xl tracking-tight uppercase italic leading-none">Quick Schedule</h3>
-                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{selectedLead.name}</span>
-                            </div>
-                        </div>
-                        <button onClick={() => setIsScheduleModalOpen(false)} className="p-2 hover:bg-slate-200 rounded-full transition-all"><X size={24} /></button>
-                    </div>
-                    <div className="p-8 space-y-6">
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Data</label>
-                                <input type="date" value={scheduleData.date} onChange={(e) => setScheduleData({...scheduleData, date: e.target.value})} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm outline-none" />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Hora</label>
-                                <input type="time" value={scheduleData.time} onChange={(e) => setScheduleData({...scheduleData, time: e.target.value})} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm outline-none" />
-                            </div>
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Tipo de Call</label>
-                            <select value={scheduleData.type} onChange={(e) => setScheduleData({...scheduleData, type: e.target.value})} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-black text-[10px] uppercase outline-none">
-                                <option value="Mapa da Clareza">Mapa da Clareza (Pago)</option>
-                                <option value="Discovery">Discovery (Gratuito)</option>
-                                <option value="Closing">Fechamento (Closing)</option>
-                                <option value="Mentorship">Mentoria Individual</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div className="p-8 bg-slate-50/50">
-                        <button onClick={handleQuickSchedule} disabled={isSaving} className="w-full py-5 bg-slate-900 text-white rounded-[1.5rem] font-black text-[10px] uppercase tracking-[0.2em] shadow-xl hover:bg-blue-600 transition-all flex items-center justify-center gap-3">
-                            {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
-                            Confirmar & Sincronizar
-                        </button>
-                    </div>
-                </motion.div>
+      {/* Modal: Quick Schedule — shadcn Dialog (FocusTrap + ESC nativos via Radix) */}
+      <Dialog open={isScheduleModalOpen && !!selectedLead} onOpenChange={(open) => { if (!open) { setIsScheduleModalOpen(false); setSelectedLead(null); } }}>
+        <DialogContent className="rounded-[3rem] max-w-lg p-0 overflow-hidden">
+          {selectedLead && <>
+            <div className="p-8 border-b border-slate-50 flex items-center gap-3 bg-slate-50/50">
+              <div className="p-3 bg-blue-600 text-white rounded-2xl"><Zap size={20} /></div>
+              <div>
+                <h3 className="font-black text-slate-900 text-xl tracking-tight uppercase italic leading-none">Quick Schedule</h3>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{selectedLead.name}</span>
+              </div>
             </div>
-        )}
-      </AnimatePresence>
+            <div className="p-8 space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Data</label>
+                  <input type="date" value={scheduleData.date} onChange={(e) => setScheduleData({...scheduleData, date: e.target.value})} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm outline-none" aria-label="Data da call" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Hora</label>
+                  <input type="time" value={scheduleData.time} onChange={(e) => setScheduleData({...scheduleData, time: e.target.value})} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm outline-none" aria-label="Hora da call" />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Tipo de Call</label>
+                <select value={scheduleData.type} onChange={(e) => setScheduleData({...scheduleData, type: e.target.value})} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-black text-[10px] uppercase outline-none" aria-label="Tipo de call">
+                  <option value="Mapa da Clareza">Mapa da Clareza (Pago)</option>
+                  <option value="Discovery">Discovery (Gratuito)</option>
+                  <option value="Closing">Fechamento (Closing)</option>
+                  <option value="Mentorship">Mentoria Individual</option>
+                </select>
+              </div>
+            </div>
+            <div className="p-8 bg-slate-50/50">
+              <button onClick={handleQuickSchedule} disabled={isSaving} className="w-full py-5 bg-slate-900 text-white rounded-[1.5rem] font-black text-[10px] uppercase tracking-[0.2em] shadow-xl hover:bg-blue-600 transition-all flex items-center justify-center gap-3">
+                {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
+                Confirmar & Sincronizar
+              </button>
+            </div>
+          </>}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

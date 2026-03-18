@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { LeadStatus } from '../types';
 import { useAppStore } from '../store/useAppStore';
+import { toast } from 'sonner';
 
 type MainUnit = 'Overview' | '3D Digital' | 'Grupo VcChic';
 
@@ -256,7 +257,7 @@ const Dashboard: React.FC = () => {
       setNewMetric({ ...newMetric, sales: '', spend: '' });
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
-    } catch { alert('Erro ao sincronizar.'); } finally { setIsSavingMetric(false); }
+    } catch { toast.error('Erro ao sincronizar.'); } finally { setIsSavingMetric(false); }
   };
 
   return (

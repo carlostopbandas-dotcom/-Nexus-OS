@@ -20,7 +20,8 @@ import SezoPage from './pages/SezoPage';
 import VoiceAssistant from './components/VoiceAssistant';
 import { useAppStore } from './store/useAppStore';
 import type { CallLog } from './types';
-import { Loader2 } from 'lucide-react';
+import { Toaster } from 'sonner';
+import { SkeletonStat } from './components/ui/skeleton';
 
 const AppContent: React.FC = () => {
   const location = useLocation();
@@ -49,9 +50,8 @@ const AppContent: React.FC = () => {
         <div className="h-full overflow-y-auto custom-scrollbar p-8">
           <div className="max-w-[1440px] mx-auto min-h-full pb-20">
             {loading ? (
-              <div className="flex flex-col items-center justify-center h-full text-slate-400">
-                <Loader2 size={40} className="animate-spin mb-4 text-blue-600" />
-                <p className="font-bold text-xs uppercase tracking-widest">Sincronizando Nexus Cloud...</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {Array.from({ length: 8 }).map((_, i) => <SkeletonStat key={i} />)}
               </div>
             ) : (
               <AnimatePresence mode="wait">
@@ -94,6 +94,7 @@ const App: React.FC = () => (
   <AuthProvider>
     <ProtectedRoute>
       <AppContent />
+      <Toaster position="bottom-right" richColors closeButton />
     </ProtectedRoute>
   </AuthProvider>
 );

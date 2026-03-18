@@ -6,6 +6,7 @@ import { eventsService } from '../services/eventsService';
 import { Clock, User, Phone, Megaphone, Sparkles, Calendar as CalendarIcon, Zap, AlertCircle, Trash2, Loader2, Pencil, Plus, Check, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppStore } from '../store/useAppStore';
+import { toast } from 'sonner';
 
 type BlockStatus = 'past' | 'current' | 'future';
 
@@ -101,7 +102,7 @@ const Routine: React.FC = () => {
       if (error) {
           console.error("Erro ao deletar:", error);
           setEvents(previousEvents);
-          alert("Erro ao remover compromisso.");
+          toast.error("Erro ao remover compromisso.");
       }
       setDeletingId(null);
   };

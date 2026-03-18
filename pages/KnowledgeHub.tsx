@@ -2,6 +2,7 @@
 import React, { useState, useRef } from 'react';
 import { BookOpen, Play, FileText, BrainCircuit, Clock, ChevronRight, Bookmark, X, Loader2, Sparkles, GraduationCap, ArrowRight, Search, UploadCloud } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
+import { toast } from 'sonner';
 
 interface Resource {
     id: string;
@@ -59,7 +60,7 @@ const KnowledgeHub: React.FC = () => {
         const isImage = supportedImages.includes(file.type);
 
         if (!isText && !isPDF && !isImage) {
-            alert("Formato não suportado. Por favor envie PDF, Imagem ou Texto.");
+            toast.error("Formato não suportado. Por favor envie PDF, Imagem ou Texto.");
             e.target.value = '';
             return;
         }

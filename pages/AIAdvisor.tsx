@@ -3,6 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { GoogleGenAI } from "@google/genai";
 import { Sparkles, Loader2, Send, Bot, User, ArrowUp, Zap, ExternalLink, TrendingUp, X, FileText, Image as ImageIcon, UploadCloud, Copy, Download, Check } from 'lucide-react';
 import { AI_MODELS } from '../constants';
+import { toast } from 'sonner';
 
 interface Source {
     title: string;
@@ -61,7 +62,7 @@ const AIAdvisor: React.FC = () => {
       const isImage = supportedImages.includes(file.type);
 
       if (!isText && !isPDF && !isImage) {
-          alert("Formato não suportado. Por favor envie PDF, Imagem (JPG/PNG) ou Texto (TXT/MD/CSV).");
+          toast.error("Formato não suportado. Por favor envie PDF, Imagem (JPG/PNG) ou Texto (TXT/MD/CSV).");
           e.target.value = '';
           return;
       }

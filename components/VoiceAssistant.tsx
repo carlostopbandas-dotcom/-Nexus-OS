@@ -6,6 +6,7 @@ import { GoogleGenAI, LiveServerMessage, Modality, Type, FunctionDeclaration } f
 import { supabase } from '@/lib/supabase';
 import { AI_MODELS } from '../constants';
 import { CallLog } from '../types';
+import { toast } from 'sonner';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
 
@@ -692,11 +693,11 @@ REGRAS:
         setAssistantStatus('idle');
         const msg = error?.message || String(error);
         if (msg.includes('Permission denied') || msg.includes('NotAllowedError')) {
-            alert("Permissão de microfone negada. Habilite o acesso ao microfone no navegador.");
+            toast.error("Permissão de microfone negada. Habilite o acesso ao microfone no navegador.");
         } else if (msg.includes('NotFoundError')) {
-            alert("Nenhum microfone encontrado. Conecte um microfone e tente novamente.");
+            toast.error("Nenhum microfone encontrado. Conecte um microfone e tente novamente.");
         } else {
-            alert("Erro ao conectar Nexus Voice: " + msg);
+            toast.error("Erro ao conectar Nexus Voice: " + msg);
         }
     }
   };
