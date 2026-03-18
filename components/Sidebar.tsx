@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Target, Users, Calendar, CheckSquare, BrainCircuit, PhoneCall, Megaphone, BookOpen, Command, Layout, LogOut } from 'lucide-react';
+import { Target, Users, Calendar, CheckSquare, BrainCircuit, PhoneCall, Megaphone, BookOpen, Command, Layout, LogOut, ShoppingBag, Store, ShoppingCart } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
 const menuItems = [
@@ -14,6 +14,12 @@ const menuItems = [
   { path: '/routine',   label: 'Agenda & Rotina',     icon: <Calendar size={20} /> },
   { path: '/tasks',     label: 'Sprint 1-3-5',        icon: <CheckSquare size={20} /> },
   { path: '/ai',        label: 'IA Advisor',          icon: <BrainCircuit size={20} /> },
+];
+
+const storeItems = [
+  { path: '/shopify', label: 'Grupo VcChic',  icon: <ShoppingBag size={20} /> },
+  { path: '/vcchic',  label: 'VcChic Store',  icon: <Store size={20} /> },
+  { path: '/sezo',    label: 'Sezo Store',    icon: <ShoppingCart size={20} /> },
 ];
 
 const Sidebar: React.FC = () => {
@@ -48,6 +54,9 @@ const Sidebar: React.FC = () => {
 
         <p className="px-4 text-[9px] font-black text-slate-600 uppercase tracking-widest mb-3 mt-8">Performance</p>
         {menuItems.slice(6).map((item) => renderMenuItem(item, isActive, navigate))}
+
+        <p className="px-4 text-[9px] font-black text-slate-600 uppercase tracking-widest mb-3 mt-8">E-Commerce</p>
+        {storeItems.map((item) => renderMenuItem(item, isActive, navigate))}
       </nav>
 
       {/* Footer Area */}
