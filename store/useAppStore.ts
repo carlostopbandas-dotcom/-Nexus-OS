@@ -26,6 +26,7 @@ interface AppState {
   okrs: OKR[]
   contentPosts: Post[]
   storeMetrics: StoreMetric[]
+  ytdStoreMetrics: StoreMetric[]
 
   // Loading
   loading: boolean
@@ -39,6 +40,7 @@ interface AppState {
   fetchOkrs: () => Promise<void>
   fetchContentPosts: () => Promise<void>
   fetchStoreMetrics: () => Promise<void>
+  fetchYtdStoreMetrics: () => Promise<void>
   fetchAll: () => Promise<void>
 
   // Mutations — set full arrays
@@ -49,6 +51,7 @@ interface AppState {
   setOkrs: (okrs: OKR[]) => void
   setContentPosts: (posts: Post[]) => void
   setStoreMetrics: (metrics: StoreMetric[]) => void
+  setYtdStoreMetrics: (metrics: StoreMetric[]) => void
 
   // Mutations — granular (no re-fetch needed)
   addLead: (lead: Lead) => void
@@ -72,6 +75,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   okrs: [],
   contentPosts: [],
   storeMetrics: [],
+  ytdStoreMetrics: [],
   loading: false,
   error: null,
 
@@ -112,6 +116,13 @@ export const useAppStore = create<AppState>((set, get) => ({
     if (data) set({ storeMetrics: data })
   },
 
+  fetchYtdStoreMetrics: async () => {
+    const now = new Date()
+    const firstDayOfYear = `${now.getFullYear()}-01-01`
+    const { data } = await storeMetricsService.getByDateRange(firstDayOfYear)
+    if (data) set({ ytdStoreMetrics: data })
+  },
+
   fetchAll: async () => {
     set({ loading: true, error: null })
     try {
@@ -123,6 +134,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         get().fetchOkrs(),
         get().fetchContentPosts(),
         get().fetchStoreMetrics(),
+        get().fetchYtdStoreMetrics(),
       ])
     } catch (err) {
       set({ error: 'Erro ao sincronizar dados' })
@@ -139,6 +151,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   setOkrs: (okrs) => set({ okrs }),
   setContentPosts: (contentPosts) => set({ contentPosts }),
   setStoreMetrics: (storeMetrics) => set({ storeMetrics }),
+  setYtdStoreMetrics: (ytdStoreMetrics) => set({ ytdStoreMetrics }),
 
   addLead: (lead) => set((state) => ({ leads: [lead, ...state.leads] })),
   updateLead: (id, updates) => set((state) => ({ leads: state.leads.map((l) => l.id === id ? { ...l, ...updates } : l) })),
