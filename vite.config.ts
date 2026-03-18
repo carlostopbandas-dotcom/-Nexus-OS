@@ -29,6 +29,12 @@ function makeShopifyProxy(prefix: string, shop: string, token: string) {
           timeout: 20000,
         };
 
+        if (!token || !shop) {
+          res.writeHead(503, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: `Shopify proxy not configured for "${prefix}": missing token or shop` }));
+          return;
+        }
+
         const shopifyReq = https.request(options, (shopifyRes) => {
           const chunks: Buffer[] = [];
           shopifyRes.on('data', (chunk: Buffer) => chunks.push(chunk));
