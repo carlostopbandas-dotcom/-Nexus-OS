@@ -2,6 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { GoogleGenAI } from "@google/genai";
 import { Sparkles, Loader2, Send, Bot, User, ArrowUp, Zap, ExternalLink, TrendingUp, X, FileText, Image as ImageIcon, UploadCloud, Copy, Download, Check } from 'lucide-react';
+import { AI_MODELS } from '../constants';
 
 interface Source {
     title: string;
@@ -29,7 +30,7 @@ interface AttachmentData {
 const AIAdvisor: React.FC = () => {
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<Message[]>([
-      { id: '0', role: 'ai', content: 'Olá, Carlos. Sou seu Advisor Estratégico. Posso analisar documentos, contratos ou relatórios. Basta anexar o arquivo (PDF, TXT ou Imagem) e pedir um resumo.', timestamp: new Date() }
+      { id: '0', role: 'ai', content: 'Olá, Carlos Eduardo. Sou seu Advisor Estratégico. Posso analisar documentos, contratos ou relatórios. Basta anexar o arquivo (PDF, TXT ou Imagem) e pedir um resumo.', timestamp: new Date() }
   ]);
   const [loading, setLoading] = useState(false);
   const [attachment, setAttachment] = useState<AttachmentData | null>(null);
@@ -129,27 +130,27 @@ const AIAdvisor: React.FC = () => {
         let aiText = "";
         let sources: Source[] = [];
 
-        if (!process.env.API_KEY) {
+        if (!import.meta.env.VITE_GEMINI_API_KEY) {
              await new Promise(r => setTimeout(r, 2000));
              aiText = "Simulação (Sem API Key): \n\n### 📄 Resumo do Documento\n**Tipo:** Relatório Financeiro (Simulado)\n\n**Pontos Chave:**\n* A margem bruta subiu para 48%.\n* O custo de aquisição (CAC) está alto no canal Facebook.\n\n**Ação Recomendada:** Revisar criativos do Ads.";
         } else {
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-            
-            const history = messages.map(m => `${m.role === 'user' ? 'Carlos' : 'Advisor'}: ${m.content}`).join('\n');
-            
+            const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
+
+            const history = messages.map(m => `${m.role === 'user' ? 'Carlos Eduardo' : 'Advisor'}: ${m.content}`).join('\n');
+
             // Construct Prompt
-            let promptText = `Você é um Advisor de Negócios de Elite para um CEO (Carlos). 
-            
+            let promptText = `Você é um Advisor de Negócios de Elite para um CEO (Carlos Eduardo).
+
             **Contexto:**
-            Carlos é CEO de Educação 3D e E-commerce de Moda (VcChic).
-            
+            Carlos Eduardo é CEO de Educação 3D e E-commerce de Moda (VcChic).
+
             **Sua Missão:**
             ${currentAttachment ? 'O usuário enviou um documento. LEIA O ARQUIVO COMPLETAMENTE. Forneça um resumo fiel, executivo e estruturado (Bullet points). Destaque: 1) Objetivo do doc, 2) Pontos Críticos/Riscos, 3) Dados Financeiros (se houver), 4) Ações sugeridas para o CEO.' : 'Responda de forma curta, estratégica e acionável.'}
 
             Histórico da conversa:
             ${history}
-            
-            Carlos: ${userMsg.content}`;
+
+            Carlos Eduardo: ${userMsg.content}`;
 
             // Handle Text Attachments directly in prompt to avoid MIME type issues
             if (currentAttachment && currentAttachment.isText) {
@@ -169,19 +170,18 @@ const AIAdvisor: React.FC = () => {
                 });
             }
 
+            const contentsPayload = { role: 'user', parts };
+
             const result = await ai.models.generateContent({
-                model: 'gemini-3-flash-preview',
-                contents: {
-                    role: 'user',
-                    parts: parts
-                },
+                model: AI_MODELS.FLASH,
+                contents: contentsPayload,
                 config: {
                     // Only use search if NO attachment (to avoid distraction when summarizing docs)
-                    tools: currentAttachment ? [] : [{ googleSearch: {} }] 
+                    tools: currentAttachment ? [] : [{ googleSearch: {} }]
                 }
             });
-            
-            aiText = result.text || "Desculpe, não consegui processar o documento/pergunta.";
+
+            aiText = result.text ?? "Desculpe, não consegui processar o documento/pergunta.";
 
             // Extract Grounding Metadata (Only if Search was used)
             const chunks = result.candidates?.[0]?.groundingMetadata?.groundingChunks;
@@ -203,11 +203,17 @@ const AIAdvisor: React.FC = () => {
 
     } catch (error: any) {
         console.error("AI Error:", error);
-        let errorMessage = "Erro ao processar. Tente novamente.";
-        if (error.message?.includes('MIME type')) {
+        const errMsg = error?.message ?? '';
+        const errStatus = error?.status ?? error?.statusCode ?? 0;
+        let errorMessage = `Erro ao processar: ${errMsg || 'erro desconhecido'}`;
+        if (errMsg.includes('MIME type')) {
             errorMessage = "Erro de formato: O arquivo enviado não é suportado pela IA (Use PDF, JPG, PNG ou TXT).";
-        } else if (error.message?.includes('400')) {
-             errorMessage = "Erro na requisição. O arquivo pode ser muito grande.";
+        } else if (errStatus === 400 || errMsg.includes('400')) {
+            errorMessage = "Erro na requisição (400). O arquivo pode ser muito grande ou o formato não é suportado.";
+        } else if (errStatus === 403 || errMsg.includes('403') || errMsg.includes('API_KEY')) {
+            errorMessage = "Erro de autenticação: verifique se a VITE_GEMINI_API_KEY está correta e com permissões ativas.";
+        } else if (errStatus === 429 || errMsg.includes('429') || errMsg.includes('RESOURCE_EXHAUSTED')) {
+            errorMessage = "Cota da API Gemini esgotada (limite diário atingido). Verifique sua cota no Google AI Studio ou aguarde a renovação às 00h UTC.";
         }
         setMessages(prev => [...prev, { id: (Date.now()+1).toString(), role: 'ai', content: errorMessage, timestamp: new Date() }]);
     } finally {
@@ -241,12 +247,12 @@ const AIAdvisor: React.FC = () => {
                 <h2 className="font-bold text-slate-800 leading-tight">Advisor Estratégico</h2>
                 <div className="flex items-center gap-1.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
-                    <span className="text-xs text-slate-500 font-medium">Online • Docs & Search</span>
+                    <span className="text-xs text-slate-500 font-medium">Online • Docs & Análise</span>
                 </div>
             </div>
         </div>
         <button 
-            onClick={() => setMessages([{ id: '0', role: 'ai', content: 'Memória limpa. Qual o próximo foco, Carlos?', timestamp: new Date() }])}
+            onClick={() => setMessages([{ id: '0', role: 'ai', content: 'Memória limpa. Qual o próximo foco, Carlos Eduardo?', timestamp: new Date() }])}
             className="text-xs font-medium text-slate-400 hover:text-indigo-600 transition-colors"
         >
             Limpar Conversa

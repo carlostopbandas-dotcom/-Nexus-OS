@@ -1,6 +1,12 @@
 
 import { Lead, LeadStatus, OKR, ScheduleBlock, Task, CalendarEvent, CallLog } from './types';
 
+// AI Model Constants
+export const AI_MODELS = {
+  FLASH: 'gemini-2.5-flash',
+  VOICE: 'gemini-2.5-flash-native-audio-preview-12-2025',
+} as const;
+
 // Based on "3) OKRs 2026"
 export const INITIAL_OKRS: OKR[] = [
   {

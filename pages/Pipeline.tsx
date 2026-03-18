@@ -5,7 +5,7 @@ import { useAppStore } from '../store/useAppStore';
 import { leadsService } from '../services/leadsService';
 import { eventsService } from '../services/eventsService';
 import { callLogsService } from '../services/callLogsService';
-import { Plus, Clock, X, Save, Loader2, Sparkles, Thermometer, Zap, Check, ChevronLeft, ChevronRight, MoreVertical, Search } from 'lucide-react';
+import { Plus, Clock, X, Save, Loader2, Sparkles, Thermometer, Zap, Check, ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const Pipeline: React.FC = () => {
@@ -33,9 +33,11 @@ const Pipeline: React.FC = () => {
     { id: LeadStatus.WON, title: 'Vendido', text: 'text-emerald-600', bg: 'bg-emerald-50' },
   ];
 
-  const projectLeads = leads
-    .filter(l => ['Nexus', 'Mapa da Clareza', 'Formação 3D', 'Projeto Respirar'].includes(l.product))
-    .filter(l => l.name.toLowerCase().includes(searchQuery.toLowerCase()));
+  const allProjectLeads = leads.filter(l => ['Nexus', 'Mapa da Clareza', 'Formação 3D', 'Projeto Respirar'].includes(l.product));
+  const conversionRate = allProjectLeads.length > 0
+    ? ((allProjectLeads.filter(l => l.status === LeadStatus.WON).length / allProjectLeads.length) * 100).toFixed(1)
+    : '0.0';
+  const projectLeads = allProjectLeads.filter(l => l.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
   const handleUpdateStatus = async (leadId: string, newStatus: LeadStatus) => {
       const originalStatus = leads.find(l => l.id === leadId)?.status;
@@ -64,7 +66,7 @@ const Pipeline: React.FC = () => {
           if (data) addLead(data);
           setIsModalOpen(false);
           setNewLead({ name: '', email: '', product: 'Nexus', source: 'Organic', value: 0, status: LeadStatus.NEW });
-      } catch (err) { alert("Erro ao salvar."); } finally { setIsSaving(false); }
+      } catch (err) { alert("Erro ao salvar lead. Verifique os dados e sua conexão."); } finally { setIsSaving(false); }
   };
 
   const handleQuickSchedule = async () => {
@@ -142,17 +144,7 @@ const Pipeline: React.FC = () => {
           <h2 className="text-4xl font-black text-slate-900 tracking-tighter uppercase italic">CRM <span className="text-blue-600">INTEL</span></h2>
           <p className="text-slate-400 font-bold text-xs uppercase tracking-tight">Gestão Térmica de Oportunidades</p>
         </div>
-        <div className="flex gap-4 items-center">
-          <div className="relative">
-              <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Buscar lead..."
-                className="pl-10 pr-4 py-3 bg-white border border-slate-100 rounded-2xl text-xs font-bold outline-none focus:ring-4 focus:ring-blue-500/5 focus:border-blue-200 shadow-sm w-48 transition-all"
-              />
-          </div>
+        <div className="flex gap-4">
           <div className="bg-white px-6 py-3 rounded-2xl border border-slate-100 shadow-xl shadow-slate-200/50 flex items-center gap-6">
               <div className="flex flex-col">
                   <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Pipe Ativo</span>
@@ -161,20 +153,38 @@ const Pipeline: React.FC = () => {
               <div className="w-[1px] h-6 bg-slate-100"></div>
               <div className="flex flex-col">
                   <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Taxa Conversão</span>
-                  <span className="text-sm font-black text-emerald-500">14.2%</span>
+                  <span className="text-sm font-black text-emerald-500">{conversionRate}%</span>
               </div>
           </div>
           <button onClick={() => setIsModalOpen(true)} className="flex items-center gap-3 bg-slate-900 text-white px-8 py-4 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest hover:bg-blue-600 transition-all shadow-2xl shadow-blue-500/20"><Plus size={16} /> Novo Lead</button>
         </div>
       </div>
 
-      {/* Kanban Board - Grid 4 colunas */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', height: 'calc(100vh - 220px)' }}>
+      {/* Search bar */}
+      <div className="flex items-center gap-3 bg-white border border-slate-100 rounded-2xl px-5 py-3 shadow-sm">
+        <Search size={16} className="text-slate-300 flex-shrink-0" />
+        <input
+          type="text"
+          placeholder="Buscar lead..."
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+          className="flex-1 text-xs font-bold text-slate-700 placeholder-slate-300 outline-none bg-transparent"
+        />
+        {searchQuery && (
+          <button onClick={() => setSearchQuery('')} className="text-slate-300 hover:text-slate-600 transition-colors">
+            <X size={14} />
+          </button>
+        )}
+      </div>
+
+      {/* Kanban Board */}
+      <div className="overflow-x-auto min-h-0" style={{ height: 'calc(100vh - 280px)' }}>
+        <div className="flex gap-6 min-w-[1200px] h-full pb-2">
           {kanbanColumns.map(col => {
             const items = projectLeads.filter(l => l.status === col.id);
             return (
-            <div key={col.id} className="bg-white/40 border border-slate-100 rounded-[2rem] flex flex-col p-3 shadow-sm" style={{ minHeight: 0, overflow: 'hidden' }}>
-              <div className="p-4 mb-2 flex justify-between items-center" style={{ flexShrink: 0 }}>
+            <div key={col.id} className="flex-1 bg-white/40 border border-slate-100 rounded-[2.5rem] flex flex-col p-4 shadow-sm min-w-[260px] min-h-0">
+              <div className="p-4 mb-2 flex justify-between items-center flex-shrink-0">
                   <h3 className={`font-black text-[10px] uppercase tracking-[0.2em] ${col.text}`}>{col.title}</h3>
                   <div className="flex items-center gap-2">
                       <span className="text-[10px] font-black text-slate-400 italic">R$ {items.reduce((acc, l) => acc + l.value, 0).toLocaleString()}</span>
@@ -184,7 +194,7 @@ const Pipeline: React.FC = () => {
                   </div>
               </div>
 
-              <div className="space-y-4 px-2" style={{ flex: '1 1 0%', overflowY: 'auto', minHeight: 0 }}>
+              <div className="flex-1 overflow-y-auto min-h-0 space-y-4 px-2" style={{ scrollbarWidth: 'thin', scrollbarColor: '#B0B0B0 transparent' }}>
                 {items.map(lead => {
                     const days = getDaysInPipeline(lead.createdAt);
                     const heat = getHeatColor(days, lead.status as LeadStatus);
@@ -242,6 +252,7 @@ const Pipeline: React.FC = () => {
               </div>
             </div>
           )})}
+        </div>
       </div>
 
       <AnimatePresence>

@@ -6,6 +6,7 @@ import { tasksService } from '../services/tasksService';
 import { CheckSquare, Plus, Trash2, Sparkles, Loader2, Trophy, ArrowUp, ArrowDown, Briefcase, ShoppingBag, User, Store, Youtube, BarChart3, Target, MousePointer2, AlertTriangle } from 'lucide-react';
 import { GoogleGenAI, Type } from "@google/genai";
 import { motion, AnimatePresence } from 'framer-motion';
+import { AI_MODELS } from '../constants';
 
 interface TaskCardProps {
     task: Task;
@@ -82,6 +83,7 @@ const Tasks: React.FC = () => {
   const [isClassifying, setIsClassifying] = useState(false);
   const [isReorganizing, setIsReorganizing] = useState(false);
   const [celebrate, setCelebrate] = useState(false);
+  const [addError, setAddError] = useState<string | null>(null);
 
   const BigRocks = tasks.filter(t => t.type === 'Big Rock' && !t.completed);
   const Mediums = tasks.filter(t => t.type === 'Medium' && !t.completed);
@@ -93,7 +95,7 @@ const Tasks: React.FC = () => {
       setIsReorganizing(true);
 
       try {
-          const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+          const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
 
           const taskList = incompleteTasks.map(t => `ID: ${t.id} | Título: "${t.title}" | Tipo Atual: ${t.type} | Categoria: ${t.category}`).join('\n');
 
@@ -112,7 +114,7 @@ const Tasks: React.FC = () => {
           Retorne APENAS um JSON array com objetos { "id": "...", "type": "Big Rock" | "Medium" | "Small" }.`;
 
           const result = await ai.models.generateContent({
-              model: 'gemini-3-flash-preview',
+              model: AI_MODELS.FLASH,
               contents: prompt,
               config: {
                   responseMimeType: 'application/json',
@@ -163,7 +165,7 @@ const Tasks: React.FC = () => {
       setIsClassifying(true);
 
       try {
-          const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+          const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
           
           const prompt = `Você é o Advisor de Produtividade do Carlos (CEO).
           O Carlos usa a Regra 1-3-5:
@@ -186,7 +188,7 @@ const Tasks: React.FC = () => {
           Retorne apenas JSON.`;
 
           const result = await ai.models.generateContent({
-              model: 'gemini-3-flash-preview',
+              model: AI_MODELS.FLASH,
               contents: prompt,
               config: {
                   responseMimeType: 'application/json',
