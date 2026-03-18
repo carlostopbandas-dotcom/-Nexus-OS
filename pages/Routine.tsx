@@ -3,7 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { DAILY_ROUTINE } from '../constants';
 import { CalendarEvent, ScheduleBlock, Task } from '../types';
 import { eventsService } from '../services/eventsService';
-import { Clock, User, Phone, Megaphone, Sparkles, Calendar as CalendarIcon, Zap, AlertCircle, Trash2, Loader2 } from 'lucide-react';
+import { Clock, User, Phone, Megaphone, Sparkles, Calendar as CalendarIcon, Zap, AlertCircle, Trash2, Loader2, Pencil, Plus, Check, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppStore } from '../store/useAppStore';
 
@@ -15,7 +15,46 @@ const Routine: React.FC = () => {
   const [viewMode, setViewMode] = useState<'real' | 'ideal'>('real');
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  
+
+  // Blueprint state
+  const [blueprintBlocks, setBlueprintBlocks] = useState<ScheduleBlock[]>(() => {
+    try {
+      const saved = localStorage.getItem('nexus-blueprint');
+      return saved ? JSON.parse(saved) : DAILY_ROUTINE;
+    } catch {
+      return DAILY_ROUTINE;
+    }
+  });
+  const [editingIdx, setEditingIdx] = useState<number | null>(null);
+  const [editForm, setEditForm] = useState<{ startTime: string; endTime: string; activity: string; type: ScheduleBlock['type'] }>({ startTime: '', endTime: '', activity: '', type: 'Deep Work' });
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [addForm, setAddForm] = useState<{ startTime: string; endTime: string; activity: string; type: ScheduleBlock['type'] }>({ startTime: '', endTime: '', activity: '', type: 'Deep Work' });
+
+  const saveBlueprint = (blocks: ScheduleBlock[]) => {
+    setBlueprintBlocks(blocks);
+    localStorage.setItem('nexus-blueprint', JSON.stringify(blocks));
+  };
+  const startEdit = (idx: number) => {
+    const [start, end] = blueprintBlocks[idx].time.split(' - ');
+    setEditForm({ startTime: start, endTime: end, activity: blueprintBlocks[idx].activity, type: blueprintBlocks[idx].type });
+    setEditingIdx(idx);
+  };
+  const saveEdit = () => {
+    if (editingIdx === null) return;
+    const updated = [...blueprintBlocks];
+    updated[editingIdx] = { time: `${editForm.startTime} - ${editForm.endTime}`, activity: editForm.activity, type: editForm.type };
+    saveBlueprint(updated);
+    setEditingIdx(null);
+  };
+  const deleteBlock = (idx: number) => saveBlueprint(blueprintBlocks.filter((_, i) => i !== idx));
+  const addBlock = () => {
+    if (!addForm.activity) return;
+    saveBlueprint([...blueprintBlocks, { time: `${addForm.startTime} - ${addForm.endTime}`, activity: addForm.activity, type: addForm.type }]);
+    setShowAddForm(false);
+    setAddForm({ startTime: '', endTime: '', activity: '', type: 'Deep Work' });
+  };
+  const resetBlueprint = () => { if (window.confirm('Restaurar o blueprint original?')) saveBlueprint([...DAILY_ROUTINE]); };
+
   const bigRock = tasks.find(t => t.type === 'Big Rock' && !t.completed);
 
   // Converte HH:mm para minutos totais no dia
@@ -109,7 +148,7 @@ const Routine: React.FC = () => {
 
   // Compromissos que não se encaixam em NENHUM bloco da rotina
   const unassigned = dayEvents.filter(ev => {
-      return !DAILY_ROUTINE.some(block => isTimeInBlock(ev.start, block.time));
+      return !blueprintBlocks.some(block => isTimeInBlock(ev.start, block.time));
   });
 
   return (
@@ -183,23 +222,50 @@ const Routine: React.FC = () => {
                     </motion.div>
                 )}
 
-                {DAILY_ROUTINE.map((block, idx) => {
+                {viewMode === 'ideal' && (
+                    <div className="flex items-center justify-between mb-6">
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Rotina Ideal · {blueprintBlocks.length} blocos</p>
+                        <button onClick={resetBlueprint} className="text-[10px] font-black text-slate-300 hover:text-slate-500 uppercase tracking-widest transition-all">Restaurar Padrão</button>
+                    </div>
+                )}
+
+                {blueprintBlocks.map((block, idx) => {
                     const status = getBlockStatus(block.time);
                     const eventsInThisBlock = dayEvents.filter(ev => isTimeInBlock(ev.start, block.time));
 
                     return (
                         <div key={idx} className={`relative pl-10 border-l-2 pb-10 last:border-l-0 ${status === 'past' ? 'border-slate-100' : 'border-slate-200'}`}>
                             <div className={`absolute -left-[9px] top-0 w-4 h-4 rounded-full border-4 border-white z-10 ${
-                                status === 'current' ? 'bg-blue-600 ring-4 ring-blue-100' : 
+                                status === 'current' ? 'bg-blue-600 ring-4 ring-blue-100' :
                                 status === 'past' ? 'bg-slate-300' : 'bg-slate-100'
                             }`}></div>
-                            
-                            <div className="flex items-center gap-4 mb-5">
-                                <span className={`text-sm font-black font-mono ${status === 'current' ? 'text-blue-600' : 'text-slate-400'}`}>{block.time}</span>
-                                <span className={`text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full ${
-                                    status === 'current' ? 'bg-slate-900 text-white shadow-xl' : 'bg-slate-50 text-slate-400'
-                                }`}>{block.activity}</span>
-                            </div>
+
+                            {viewMode === 'ideal' && editingIdx === idx ? (
+                                <div className="flex items-center gap-2 mb-5 flex-wrap">
+                                    <input type="time" value={editForm.startTime} onChange={e => setEditForm(f => ({ ...f, startTime: e.target.value }))} className="text-xs font-mono font-black bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:border-blue-400" />
+                                    <span className="text-slate-300 font-bold text-xs">–</span>
+                                    <input type="time" value={editForm.endTime} onChange={e => setEditForm(f => ({ ...f, endTime: e.target.value }))} className="text-xs font-mono font-black bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:border-blue-400" />
+                                    <input type="text" value={editForm.activity} onChange={e => setEditForm(f => ({ ...f, activity: e.target.value }))} className="text-xs font-black bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:border-blue-400 flex-1 min-w-[140px]" placeholder="Atividade" />
+                                    <select value={editForm.type} onChange={e => setEditForm(f => ({ ...f, type: e.target.value as ScheduleBlock['type'] }))} className="text-xs font-black bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:border-blue-400">
+                                        {(['Deep Work', 'Health', 'Meeting', 'Rest', 'Learning'] as const).map(t => <option key={t} value={t}>{t}</option>)}
+                                    </select>
+                                    <button onClick={saveEdit} className="p-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl transition-all shadow-md"><Check size={14} /></button>
+                                    <button onClick={() => setEditingIdx(null)} className="p-2 bg-slate-200 hover:bg-slate-300 text-slate-600 rounded-xl transition-all"><X size={14} /></button>
+                                </div>
+                            ) : (
+                                <div className="flex items-center gap-4 mb-5">
+                                    <span className={`text-sm font-black font-mono ${status === 'current' ? 'text-blue-600' : 'text-slate-400'}`}>{block.time}</span>
+                                    <span className={`text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full ${
+                                        status === 'current' ? 'bg-slate-900 text-white shadow-xl' : 'bg-slate-50 text-slate-400'
+                                    }`}>{block.activity}</span>
+                                    {viewMode === 'ideal' && (
+                                        <div className="ml-auto flex items-center gap-1">
+                                            <button onClick={() => startEdit(idx)} className="p-1.5 text-slate-300 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-all"><Pencil size={14} /></button>
+                                            <button onClick={() => deleteBlock(idx)} className="p-1.5 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all"><Trash2 size={14} /></button>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
 
                             {viewMode === 'real' && (
                                 <div className="space-y-3">
@@ -239,6 +305,27 @@ const Routine: React.FC = () => {
                         </div>
                     );
                 })}
+                {viewMode === 'ideal' && (
+                    <div className="pt-2 space-y-3">
+                        {showAddForm ? (
+                            <div className="bg-white border border-blue-100 rounded-2xl p-5 flex items-center gap-2 flex-wrap shadow-sm">
+                                <input type="time" value={addForm.startTime} onChange={e => setAddForm(f => ({ ...f, startTime: e.target.value }))} className="text-xs font-mono font-black bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:border-blue-400" />
+                                <span className="text-slate-300 font-bold text-xs">–</span>
+                                <input type="time" value={addForm.endTime} onChange={e => setAddForm(f => ({ ...f, endTime: e.target.value }))} className="text-xs font-mono font-black bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:border-blue-400" />
+                                <input type="text" value={addForm.activity} onChange={e => setAddForm(f => ({ ...f, activity: e.target.value }))} className="text-xs font-black bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:border-blue-400 flex-1 min-w-[140px]" placeholder="Nome da atividade" />
+                                <select value={addForm.type} onChange={e => setAddForm(f => ({ ...f, type: e.target.value as ScheduleBlock['type'] }))} className="text-xs font-black bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:border-blue-400">
+                                    {(['Deep Work', 'Health', 'Meeting', 'Rest', 'Learning'] as const).map(t => <option key={t} value={t}>{t}</option>)}
+                                </select>
+                                <button onClick={addBlock} className="p-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl transition-all shadow-md"><Check size={14} /></button>
+                                <button onClick={() => setShowAddForm(false)} className="p-2 bg-slate-200 hover:bg-slate-300 text-slate-600 rounded-xl transition-all"><X size={14} /></button>
+                            </div>
+                        ) : (
+                            <button onClick={() => setShowAddForm(true)} className="w-full flex items-center justify-center gap-2 p-4 border-2 border-dashed border-slate-200 rounded-2xl text-slate-400 hover:border-blue-400 hover:text-blue-500 transition-all text-xs font-black uppercase tracking-widest">
+                                <Plus size={16} /> Adicionar Bloco
+                            </button>
+                        )}
+                    </div>
+                )}
             </div>
         </div>
       </div>
