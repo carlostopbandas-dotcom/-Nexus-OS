@@ -3,6 +3,8 @@ import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Target, Users, Calendar, CheckSquare, BrainCircuit, PhoneCall, Megaphone, BookOpen, Command, Layout, LogOut, ShoppingBag, Store, ShoppingCart } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { Avatar } from '@/components/ui/avatar';
+import { useAuth } from '@/components/auth/AuthProvider';
 
 const menuItems = [
   { path: '/',          label: 'Cockpit CEO',        icon: <Layout size={20} /> },
@@ -25,6 +27,8 @@ const storeItems = [
 const Sidebar: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
+  const displayName = user?.user_metadata?.full_name ?? user?.user_metadata?.name ?? user?.email?.split('@')[0] ?? 'CEO';
 
   const isActive = (path: string) =>
     path === '/' ? location.pathname === '/' : location.pathname.startsWith(path);
@@ -63,9 +67,9 @@ const Sidebar: React.FC = () => {
       <div className="p-6 space-y-2">
         <div className="bg-white/5 rounded-3xl p-4 border border-white/5">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-2xl bg-blue-600 flex items-center justify-center text-white font-black text-sm shadow-xl ring-2 ring-blue-500/20">CS</div>
+            <Avatar size="lg" />
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-black text-white truncate">Carlos Silva</p>
+              <p className="text-xs font-black text-white truncate">{displayName}</p>
               <p className="text-[9px] text-slate-500 font-bold uppercase tracking-tight">CEO Founder</p>
             </div>
             <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"></div>
