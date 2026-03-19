@@ -159,7 +159,8 @@ const AIAdvisor: React.FC = () => {
             }
 
             // Prepare content parts
-            const parts: any[] = [{ text: promptText }];
+            type ContentPart = { text: string } | { inlineData: { mimeType: string; data: string } }
+            const parts: ContentPart[] = [{ text: promptText }];
             
             // Add Binary Attachment (PDF/Image) if exists
             if (currentAttachment && !currentAttachment.isText) {
@@ -188,9 +189,9 @@ const AIAdvisor: React.FC = () => {
             const chunks = result.candidates?.[0]?.groundingMetadata?.groundingChunks;
             if (chunks) {
                 sources = chunks
-                    .map((c: any) => c.web)
-                    .filter((w: any) => w)
-                    .map((w: any) => ({ title: w.title, uri: w.uri }));
+                    .map((c) => c.web)
+                    .filter((w) => w)
+                    .map((w) => ({ title: w.title, uri: w.uri }));
             }
         }
 
@@ -202,7 +203,7 @@ const AIAdvisor: React.FC = () => {
             sources: sources.length > 0 ? sources : undefined
         }]);
 
-    } catch (error: any) {
+    } catch (error) {
         console.error("AI Error:", error);
         const errMsg = error?.message ?? '';
         const errStatus = error?.status ?? error?.statusCode ?? 0;

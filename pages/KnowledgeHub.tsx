@@ -146,7 +146,8 @@ Utilize este conhecimento para otimizar processos na VcChic ou na Escola 3D, bus
                 Use headers (###) para os títulos das seções e bullet points (*) para listas.
                 Seja direto, inspirador e estratégico.`;
 
-                const parts: any[] = [];
+                type ContentPart = { text: string } | { inlineData: { mimeType: string; data: string } }
+                const parts: ContentPart[] = [];
 
                 if (fileData) {
                     prompt = `Atue como um Mentor Executivo de Elite.

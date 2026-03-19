@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "lint": "eslint . --ext .ts,.tsx",
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
-    "format": "prettier --write '*.{ts,tsx}' 'components/**/*.{ts,tsx}' 'pages/**/*.{ts,tsx}' 'services/**/*.{ts,tsx}' 'store/**/*.{ts,tsx}' 'lib/**/*.{ts,tsx}'"
+    "format": "prettier --write '*.{ts,tsx}' 'components/**/*.{ts,tsx}' 'pages/**/*.{ts,tsx}' 'services/**/*.{ts,tsx}' 'store/**/*.{ts,tsx}' 'lib/**/*.{ts,tsx}'",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@google/genai": "^1.38.0",

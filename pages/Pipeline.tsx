@@ -272,7 +272,7 @@ const Pipeline: React.FC = () => {
             <div className="grid grid-cols-2 gap-6">
               <div className="space-y-2">
                 <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-2">Produto Principal</label>
-                <select value={newLead.product} onChange={(e) => setNewLead({...newLead, product: e.target.value as any})} className="w-full px-6 py-5 bg-slate-50 border border-slate-100 rounded-[1.5rem] font-bold text-xs uppercase outline-none" aria-label="Produto principal">
+                <select value={newLead.product} onChange={(e) => setNewLead({...newLead, product: e.target.value as Lead['product']})} className="w-full px-6 py-5 bg-slate-50 border border-slate-100 rounded-[1.5rem] font-bold text-xs uppercase outline-none" aria-label="Produto principal">
                   <option value="Nexus">Nexus</option>
                   <option value="Mapa da Clareza">Mapa da Clareza</option>
                   <option value="Formação 3D">Formação 3D</option>

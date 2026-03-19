@@ -27,7 +27,7 @@ export const shopifyService = {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       return { data: data.orders || [], error: null };
-    } catch (e: any) {
+    } catch (e) {
       return { data: [], error: e.message };
     }
   },
@@ -41,7 +41,7 @@ export const shopifyService = {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       return { data: data.orders || [], error: null };
-    } catch (e: any) {
+    } catch (e) {
       return { data: [], error: e.message };
     }
   },

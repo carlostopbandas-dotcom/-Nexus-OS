@@ -101,7 +101,7 @@ const ContentMachine: React.FC = () => {
       }
   };
 
-  const PlatformButton = ({ id, label, icon: Icon }: { id: Platform, label: string, icon: any }) => {
+  const PlatformButton = ({ id, label, icon: Icon }: { id: Platform, label: string, icon: React.ElementType }) => {
       const isActive = activePlatform === id;
       const styles = platformStyles[id];
       return (

@@ -49,7 +49,7 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onAddCallLog }) => {
   const streamRef = useRef<MediaStream | null>(null);
   const nextStartTimeRef = useRef<number>(0);
   const audioQueueRef = useRef<AudioBufferSourceNode[]>([]);
-  const sessionRef = useRef<Promise<any> | null>(null);
+  const sessionRef = useRef<Promise<unknown> | null>(null);
 
   // Audio Processing Helpers
   const floatTo16BitPCM = (input: Float32Array) => {
@@ -286,14 +286,16 @@ REGRAS:
         const ephemeralToken = await getGeminiEphemeralToken(liveConfig)
         const ai = new GoogleGenAI({ apiKey: ephemeralToken });
 
-        // Setup Audio Contexts
-        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
+        // Setup Audio Contexts — webkitAudioContext for Safari compat
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const AudioContextCtor: typeof AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+        audioContextRef.current = new AudioContextCtor({ sampleRate: 24000 });
 
         // Get Mic Stream
         streamRef.current = await navigator.mediaDevices.getUserMedia({ audio: { sampleRate: 16000, channelCount: 1 } });
 
         // Create a separate context for input processing to ensure correct sample rate for API
-        const inputContext = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 16000 });
+        const inputContext = new AudioContextCtor({ sampleRate: 16000 });
         inputSourceRef.current = inputContext.createMediaStreamSource(streamRef.current);
         processorRef.current = inputContext.createScriptProcessor(4096, 1, 1);
 
@@ -353,8 +355,9 @@ REGRAS:
                     if (message.toolCall) {
                         setAssistantStatus('processing');
                         for (const fc of message.toolCall.functionCalls) {
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
                             const args = fc.args as any;
-                            let responseResult: any = { result: "OK" };
+                            let responseResult: { result: string } = { result: "OK" };
 
                             try {
                                 // ─── log_sales_call ───
@@ -474,16 +477,16 @@ REGRAS:
                                     if (!allEvents || allEvents.length === 0) {
                                         responseResult = { result: "Nenhum evento encontrado no calendário." };
                                     } else {
-                                        const match = allEvents.find((e: any) => e.title.toLowerCase().includes(searchTerm))
-                                          || allEvents.find((e: any) => searchTerm.includes(e.title.toLowerCase()))
-                                          || allEvents.reduce((best: any, e: any) => {
+                                        const match = allEvents.find((e) => e.title.toLowerCase().includes(searchTerm))
+                                          || allEvents.find((e) => searchTerm.includes(e.title.toLowerCase()))
+                                          || allEvents.reduce((best, e) => {
                                               const words = searchTerm.split(' ');
                                               const score = words.filter((w: string) => e.title.toLowerCase().includes(w)).length;
                                               const bestScore = words.filter((w: string) => best.title.toLowerCase().includes(w)).length;
                                               return score > bestScore ? e : best;
                                           }, allEvents[0]);
 
-                                        const updates: Record<string, any> = {};
+                                        const updates: Record<string, string | number> = {};
                                         if (args.newTitle) updates.title = args.newTitle;
                                         if (args.newType) updates.type = args.newType;
                                         if (args.newTime) {
@@ -530,8 +533,8 @@ REGRAS:
                                     const newLeads = leadsRes.data || [];
                                     const todayMetrics = metricsRes.data || [];
 
-                                    const totalSales = todayMetrics.reduce((sum: number, m: any) => sum + (Number(m.sales) || 0), 0);
-                                    const totalSpend = todayMetrics.reduce((sum: number, m: any) => sum + (Number(m.spend) || 0), 0);
+                                    const totalSales = todayMetrics.reduce((sum: number, m) => sum + (Number(m.sales) || 0), 0);
+                                    const totalSpend = todayMetrics.reduce((sum: number, m) => sum + (Number(m.spend) || 0), 0);
 
                                     responseResult = {
                                         result: `Briefing do dia: ${pendingTasks.length} tarefas pendentes, ${todayEvents.length} eventos hoje, ${newLeads.length} leads novos no pipeline. ` +
@@ -599,25 +602,25 @@ REGRAS:
 
                                     // Pipeline & conversão
                                     const products3D = ['Nexus', 'Mapa da Clareza', 'Formação 3D'];
-                                    const leads3D = leads.filter((l: any) => products3D.includes(l.product));
-                                    const leadsWon = leads.filter((l: any) => l.status === 'Vendido');
-                                    const leadsWon3D = leads3D.filter((l: any) => l.status === 'Vendido');
-                                    const totalPipeline = leads.reduce((s: number, l: any) => s + (Number(l.value) || 0), 0);
-                                    const pipeline3D = leads3D.reduce((s: number, l: any) => s + (Number(l.value) || 0), 0);
-                                    const revenue3D = leadsWon3D.reduce((s: number, l: any) => s + (Number(l.value) || 0), 0);
+                                    const leads3D = leads.filter((l) => products3D.includes(l.product));
+                                    const leadsWon = leads.filter((l) => l.status === 'Vendido');
+                                    const leadsWon3D = leads3D.filter((l) => l.status === 'Vendido');
+                                    const totalPipeline = leads.reduce((s: number, l) => s + (Number(l.value) || 0), 0);
+                                    const pipeline3D = leads3D.reduce((s: number, l) => s + (Number(l.value) || 0), 0);
+                                    const revenue3D = leadsWon3D.reduce((s: number, l) => s + (Number(l.value) || 0), 0);
                                     const conversionRate = leads.length > 0 ? ((leadsWon.length / leads.length) * 100).toFixed(1) : '0';
 
                                     // Tarefas
-                                    const pendingTasks = tasks.filter((t: any) => !t.completed);
-                                    const bigRocks = pendingTasks.filter((t: any) => t.type === 'Big Rock');
-                                    const mediums = pendingTasks.filter((t: any) => t.type === 'Medium');
-                                    const smalls = pendingTasks.filter((t: any) => t.type === 'Small Quick Win');
+                                    const pendingTasks = tasks.filter((t) => !t.completed);
+                                    const bigRocks = pendingTasks.filter((t) => t.type === 'Big Rock');
+                                    const mediums = pendingTasks.filter((t) => t.type === 'Medium');
+                                    const smalls = pendingTasks.filter((t) => t.type === 'Small Quick Win');
                                     const focoBigRock = bigRocks.length > 0 ? bigRocks[0].title : 'Nenhum Big Rock pendente';
 
                                     // Eventos e calls
-                                    const eventsList = todayEvents.slice(0, 5).map((e: any) => `${e.start_time} - ${e.title}`).join(', ');
-                                    const positiveCount = monthCalls.filter((c: any) => c.sentiment === 'Positive').length;
-                                    const negativeCount = monthCalls.filter((c: any) => c.sentiment === 'Negative').length;
+                                    const eventsList = todayEvents.slice(0, 5).map((e) => `${e.start_time} - ${e.title}`).join(', ');
+                                    const positiveCount = monthCalls.filter((c) => c.sentiment === 'Positive').length;
+                                    const negativeCount = monthCalls.filter((c) => c.sentiment === 'Negative').length;
 
                                     const narrative = [
                                         `COCKPIT CEO — Análise completa.`,
@@ -632,7 +635,7 @@ REGRAS:
                                     responseResult = { result: narrative };
                                 }
 
-                            } catch (err: any) {
+                            } catch (err) {
                                 console.error(`Erro no tool ${fc.name}:`, err);
                                 responseResult = { result: `Erro ao executar ${fc.name}: ${err.message || 'erro desconhecido'}.` };
                             }
@@ -686,7 +689,7 @@ REGRAS:
             });
         };
 
-    } catch (error: any) {
+    } catch (error) {
         console.error("Connection failed", error);
         setIsConnecting(false);
         setIsActive(false);
