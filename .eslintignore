@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.aiox/
+.aiox-core/
+.antigravity/
+.claude/
+.codex/
+.cursor/
+.gemini/
+.github/
+docs/
+squads/
+supabase/

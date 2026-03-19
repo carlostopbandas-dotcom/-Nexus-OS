@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type FormEvent } from 'react'
 import { motion } from 'framer-motion'
 import { Command, Loader2, AlertCircle } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
@@ -9,7 +9,7 @@ export function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = async (e: FormEvent) => {
     e.preventDefault()
     setError(null)
     setLoading(true)

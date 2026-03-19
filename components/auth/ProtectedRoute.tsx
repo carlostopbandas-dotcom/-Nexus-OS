@@ -1,9 +1,10 @@
 import { Loader2 } from 'lucide-react'
+import type { ReactNode } from 'react'
 import { useAuth } from './AuthProvider'
 import { LoginPage } from './LoginPage'
 
 interface ProtectedRouteProps {
-  children: React.ReactNode
+  children: ReactNode
 }
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
