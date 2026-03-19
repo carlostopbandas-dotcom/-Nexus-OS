@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase'
-import type { StoreMetric } from '@/store/useAppStore'
+import type { StoreMetric } from '@/types'
 
 type ServiceResult<T> = { data: T | null; error: string | null }
 

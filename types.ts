@@ -86,3 +86,14 @@ export interface Post {
     date: string;
     stats?: { likes: number; views: number };
 }
+
+export interface StoreMetric {
+  id?: string;
+  store_name: string;
+  sales: number;
+  spend: number;
+  roas: number;
+  date: string;
+  created_at?: string;
+  updated_at?: string;
+}

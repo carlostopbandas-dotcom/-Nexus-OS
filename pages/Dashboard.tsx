@@ -10,20 +10,12 @@ import {
   ArrowRight, Bell, Sparkles, ChevronRight, ShoppingBag, RefreshCw,
   DollarSign, Package
 } from 'lucide-react';
-import { LeadStatus } from '../types';
+import { LeadStatus, StoreMetric } from '../types';
 import { useAppStore } from '../store/useAppStore';
 import { toast } from 'sonner';
 
 type MainUnit = 'Overview' | '3D Digital' | 'Grupo VcChic';
 
-interface StoreMetric {
-  id?: string;
-  store_name: string;
-  sales: number | string;
-  spend: number | string;
-  roas: number | string;
-  date: string;
-}
 
 interface StoreStats {
   name: string;

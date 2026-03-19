@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { Lead, Task, CalendarEvent, CallLog, OKR, Post } from '@/types'
+import type { Lead, Task, CalendarEvent, CallLog, OKR, Post, StoreMetric } from '@/types'
 import { leadsService } from '@/services/leadsService'
 import { tasksService } from '@/services/tasksService'
 import { eventsService } from '@/services/eventsService'
@@ -8,14 +8,6 @@ import { okrsService } from '@/services/okrsService'
 import { contentPostsService } from '@/services/contentPostsService'
 import { storeMetricsService } from '@/services/storeMetricsService'
 
-export interface StoreMetric {
-  id?: string
-  store_name: string
-  sales: number | string
-  spend: number | string
-  roas: number | string
-  date: string
-}
 
 interface AppState {
   // Data
