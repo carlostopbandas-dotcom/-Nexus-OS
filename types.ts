@@ -1,11 +1,23 @@
 
 export type BusinessUnit = '3D Digital' | 'Grupo VcChic' | 'VcChic' | 'Mivave' | 'Sezo' | 'Moriel' | 'Personal';
 
+export type UserRole = 'ceo' | 'gestor_vcchic' | 'vendedor_sdr' | 'assistente';
+
+export interface UserProfile {
+  id: string;
+  role: UserRole;
+  fullName: string | null;
+  email: string | null;
+  onboardedAt: string | null;
+  createdAt: string;
+}
+
 export enum LeadStatus {
   NEW = 'Novo',
   CONTACTED = 'Contatado',
   DIAGNOSTIC_SCHEDULED = 'Diagnóstico Agendado',
   PROPOSAL = 'Proposta Enviada',
+  NEGOTIATING = 'Em Negociação',
   WON = 'Vendido',
   LOST = 'Perdido'
 }
@@ -14,10 +26,16 @@ export interface Lead {
   id: string;
   name: string;
   email: string;
-  source: 'Organic' | 'Paid' | 'Indication';
+  whatsapp?: string;
+  source: 'Organic' | 'Paid' | 'Indication' | 'Network';
   status: LeadStatus;
-  value: number; // Potential value
-  product: 'Nexus' | 'Mapa da Clareza' | 'Formação 3D' | 'Projeto Respirar';
+  value: number;
+  product: 'Nexus' | 'Mapa da Clareza' | 'Formação 3D' | 'Projeto Respirar' | 'Negócio Sólido';
+  module?: 'M1' | 'M2' | 'M3' | 'M4' | 'M5' | 'Jornada Completa';
+  painPoint?: string;
+  nextAction?: string;
+  clientStage?: string;
+  followUpDate?: string;
   createdAt: string;
 }
 

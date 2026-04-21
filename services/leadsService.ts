@@ -15,10 +15,16 @@ export const leadsService = {
       id: l.id,
       name: l.name,
       email: l.email,
+      whatsapp: l.whatsapp ?? undefined,
       source: l.source,
       status: l.status,
       value: l.value,
       product: l.product,
+      module: l.module ?? undefined,
+      painPoint: l.pain_point ?? undefined,
+      nextAction: l.next_action ?? undefined,
+      clientStage: l.client_stage ?? undefined,
+      followUpDate: l.follow_up_date ?? undefined,
       createdAt: l.created_at,
     }))
     return { data: leads, error: null }
@@ -52,21 +58,23 @@ export const leadsService = {
       .single()
     if (error) return { data: null, error: error.message }
     return {
-      data: { id: data.id, name: data.name, email: data.email, source: data.source, status: data.status, value: data.value, product: data.product, createdAt: data.created_at },
+      data: { id: data.id, name: data.name, email: data.email, whatsapp: data.whatsapp, source: data.source, status: data.status, value: data.value, product: data.product, module: data.module, painPoint: data.pain_point, nextAction: data.next_action, clientStage: data.client_stage, followUpDate: data.follow_up_date, createdAt: data.created_at },
       error: null,
     }
   },
 
   async update(id: string, updates: Partial<Lead>): Promise<ServiceResult<Lead>> {
+    const { followUpDate, ...rest } = updates as any
+    const payload = { ...rest, ...(followUpDate !== undefined && { follow_up_date: followUpDate }) }
     const { data, error } = await supabase
       .from('leads')
-      .update(updates)
+      .update(payload)
       .eq('id', id)
       .select()
       .single()
     if (error) return { data: null, error: error.message }
     return {
-      data: { id: data.id, name: data.name, email: data.email, source: data.source, status: data.status, value: data.value, product: data.product, createdAt: data.created_at },
+      data: { id: data.id, name: data.name, email: data.email, whatsapp: data.whatsapp, source: data.source, status: data.status, value: data.value, product: data.product, module: data.module, painPoint: data.pain_point, nextAction: data.next_action, clientStage: data.client_stage, followUpDate: data.follow_up_date, createdAt: data.created_at },
       error: null,
     }
   },

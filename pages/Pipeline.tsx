@@ -19,7 +19,7 @@ const Pipeline: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
 
   const [newLead, setNewLead] = useState<Partial<Lead>>({
-    name: '', email: '', product: 'Nexus', source: 'Organic', value: 0, status: LeadStatus.NEW
+    name: '', email: '', whatsapp: '', product: 'Negócio Sólido', source: 'Network', value: 0, status: LeadStatus.NEW, module: undefined, painPoint: '', nextAction: ''
   });
 
   const [scheduleData, setScheduleData] = useState({
@@ -30,12 +30,15 @@ const Pipeline: React.FC = () => {
 
   const kanbanColumns = [
     { id: LeadStatus.NEW, title: 'Novos', text: 'text-blue-600', bg: 'bg-blue-50' },
+    { id: LeadStatus.CONTACTED, title: 'Contatado', text: 'text-sky-600', bg: 'bg-sky-50' },
     { id: LeadStatus.DIAGNOSTIC_SCHEDULED, title: 'Diagnóstico', text: 'text-amber-600', bg: 'bg-amber-50' },
-    { id: LeadStatus.PROPOSAL, title: 'Oferta', text: 'text-purple-600', bg: 'bg-purple-50' },
+    { id: LeadStatus.PROPOSAL, title: 'Proposta', text: 'text-purple-600', bg: 'bg-purple-50' },
+    { id: LeadStatus.NEGOTIATING, title: 'Negociação', text: 'text-orange-600', bg: 'bg-orange-50' },
     { id: LeadStatus.WON, title: 'Vendido', text: 'text-emerald-600', bg: 'bg-emerald-50' },
+    { id: LeadStatus.LOST, title: 'Perdido', text: 'text-rose-400', bg: 'bg-rose-50' },
   ];
 
-  const allProjectLeads = leads.filter(l => ['Nexus', 'Mapa da Clareza', 'Formação 3D', 'Projeto Respirar'].includes(l.product));
+  const allProjectLeads = leads.filter(l => ['Nexus', 'Mapa da Clareza', 'Formação 3D', 'Projeto Respirar', 'Negócio Sólido'].includes(l.product));
   const conversionRate = allProjectLeads.length > 0
     ? ((allProjectLeads.filter(l => l.status === LeadStatus.WON).length / allProjectLeads.length) * 100).toFixed(1)
     : '0.0';
@@ -59,15 +62,19 @@ const Pipeline: React.FC = () => {
           const { data, error } = await leadsService.create({
               name: newLead.name ?? '',
               email: newLead.email ?? '',
-              product: newLead.product ?? 'Nexus',
-              source: newLead.source ?? 'Organic',
+              whatsapp: newLead.whatsapp ?? '',
+              product: newLead.product ?? 'Negócio Sólido',
+              source: newLead.source ?? 'Network',
               value: newLead.value ?? 0,
               status: newLead.status ?? LeadStatus.NEW,
+              module: newLead.module,
+              painPoint: newLead.painPoint ?? '',
+              nextAction: newLead.nextAction ?? '',
           });
           if (error) throw new Error(error);
           if (data) addLead(data);
           setIsModalOpen(false);
-          setNewLead({ name: '', email: '', product: 'Nexus', source: 'Organic', value: 0, status: LeadStatus.NEW });
+          setNewLead({ name: '', email: '', whatsapp: '', product: 'Negócio Sólido', source: 'Network', value: 0, status: LeadStatus.NEW, module: undefined, painPoint: '', nextAction: '' });
       } catch (err) { toast.error("Erro ao salvar lead. Verifique os dados e sua conexão."); } finally { setIsSaving(false); }
   };
 
@@ -264,24 +271,68 @@ const Pipeline: React.FC = () => {
             <div className="p-3 bg-blue-600 text-white rounded-2xl"><Sparkles size={20} /></div>
             <h3 className="font-black text-slate-900 text-2xl tracking-tighter uppercase italic">Inject <span className="text-blue-600">Lead</span></h3>
           </div>
-          <div className="p-10 space-y-6">
-            <div className="space-y-2">
-              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-2">Identificação do Cliente</label>
-              <input type="text" placeholder="Nome Completo" value={newLead.name} onChange={(e) => setNewLead({...newLead, name: e.target.value})} className="w-full px-6 py-5 bg-slate-50 border border-slate-100 rounded-[1.5rem] font-bold text-sm outline-none focus:ring-4 focus:ring-blue-500/5 transition-all" aria-label="Nome do lead" />
-            </div>
-            <div className="grid grid-cols-2 gap-6">
+          <div className="p-10 space-y-5">
+            <div className="grid grid-cols-2 gap-5">
               <div className="space-y-2">
-                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-2">Produto Principal</label>
-                <select value={newLead.product} onChange={(e) => setNewLead({...newLead, product: e.target.value as Lead['product']})} className="w-full px-6 py-5 bg-slate-50 border border-slate-100 rounded-[1.5rem] font-bold text-xs uppercase outline-none" aria-label="Produto principal">
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-2">Nome Completo</label>
+                <input type="text" placeholder="Ex: João da Silva" value={newLead.name} onChange={(e) => setNewLead({...newLead, name: e.target.value})} className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm outline-none focus:ring-4 focus:ring-blue-500/5 transition-all" aria-label="Nome do lead" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-2">WhatsApp</label>
+                <input type="text" placeholder="(41) 99999-9999" value={newLead.whatsapp} onChange={(e) => setNewLead({...newLead, whatsapp: e.target.value})} className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm outline-none focus:ring-4 focus:ring-blue-500/5 transition-all" aria-label="WhatsApp do lead" />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-2">E-mail</label>
+              <input type="email" placeholder="email@empresa.com.br" value={newLead.email} onChange={(e) => setNewLead({...newLead, email: e.target.value})} className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm outline-none focus:ring-4 focus:ring-blue-500/5 transition-all" aria-label="E-mail do lead" />
+            </div>
+            <div className="grid grid-cols-3 gap-5">
+              <div className="space-y-2">
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-2">Produto</label>
+                <select value={newLead.product} onChange={(e) => setNewLead({...newLead, product: e.target.value as Lead['product'], module: undefined})} className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-xs uppercase outline-none" aria-label="Produto principal">
+                  <option value="Negócio Sólido">Negócio Sólido</option>
                   <option value="Nexus">Nexus</option>
                   <option value="Mapa da Clareza">Mapa da Clareza</option>
                   <option value="Formação 3D">Formação 3D</option>
                   <option value="Projeto Respirar">Projeto Respirar</option>
                 </select>
               </div>
+              {newLead.product === 'Negócio Sólido' && (
+                <div className="space-y-2">
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-2">Módulo (pós-diag.)</label>
+                  <select value={newLead.module ?? ''} onChange={(e) => setNewLead({...newLead, module: e.target.value as Lead['module'] || undefined})} className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-xs uppercase outline-none" aria-label="Módulo recomendado">
+                    <option value="">A definir</option>
+                    <option value="M1">M1 — Mentalidade</option>
+                    <option value="M2">M2 — Liderança</option>
+                    <option value="M3">M3 — Equipe</option>
+                    <option value="M4">M4 — Fundação</option>
+                    <option value="M5">M5 — Operação</option>
+                    <option value="Jornada Completa">Jornada Completa</option>
+                  </select>
+                </div>
+              )}
               <div className="space-y-2">
-                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-2">Valor de Pipeline (R$)</label>
-                <input type="number" placeholder="0" value={newLead.value} onChange={(e) => setNewLead({...newLead, value: Number(e.target.value)})} className="w-full px-6 py-5 bg-slate-50 border border-slate-100 rounded-[1.5rem] font-bold text-sm outline-none" aria-label="Valor do pipeline" />
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-2">Origem</label>
+                <select value={newLead.source} onChange={(e) => setNewLead({...newLead, source: e.target.value as Lead['source']})} className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-xs uppercase outline-none" aria-label="Origem do lead">
+                  <option value="Network">Network</option>
+                  <option value="Indication">Indicação</option>
+                  <option value="Organic">Orgânico</option>
+                  <option value="Paid">Pago</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-2">Valor (R$)</label>
+                <input type="number" placeholder="0" value={newLead.value} onChange={(e) => setNewLead({...newLead, value: Number(e.target.value)})} className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm outline-none" aria-label="Valor do pipeline" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-5">
+              <div className="space-y-2">
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-2">Dor Principal</label>
+                <input type="text" placeholder='Ex: "Trabalho 12h e o negócio não anda"' value={newLead.painPoint} onChange={(e) => setNewLead({...newLead, painPoint: e.target.value})} className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm outline-none focus:ring-4 focus:ring-blue-500/5 transition-all" aria-label="Dor principal do lead" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-2">Próxima Ação</label>
+                <input type="text" placeholder='Ex: "Enviar proposta até sexta"' value={newLead.nextAction} onChange={(e) => setNewLead({...newLead, nextAction: e.target.value})} className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm outline-none focus:ring-4 focus:ring-blue-500/5 transition-all" aria-label="Próxima ação" />
               </div>
             </div>
           </div>
