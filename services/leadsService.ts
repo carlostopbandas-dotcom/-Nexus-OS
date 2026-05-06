@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase'
-import type { Lead, LeadProduct, LeadBusinessUnit } from '@/types'
+import type { Lead, LeadProduct, LeadBusinessUnit, PaymentStatus } from '@/types'
 import { PRODUCT_BUSINESS_UNIT } from '@/types'
 
 type ServiceResult<T> = { data: T | null; error: string | null }
@@ -19,6 +19,7 @@ const toLead = (l: any): Lead => ({
   nextAction: l.next_action ?? undefined,
   clientStage: l.client_stage ?? undefined,
   followUpDate: l.follow_up_date ?? undefined,
+  paymentStatus: (l.payment_status ?? 'Em dia') as PaymentStatus,
   createdAt: l.created_at,
 })
 
@@ -36,6 +37,7 @@ const toDbPayload = (lead: Partial<Lead>) => ({
   ...(lead.nextAction !== undefined && { next_action: lead.nextAction }),
   ...(lead.clientStage !== undefined && { client_stage: lead.clientStage }),
   ...(lead.followUpDate !== undefined && { follow_up_date: lead.followUpDate }),
+  ...(lead.paymentStatus !== undefined && { payment_status: lead.paymentStatus }),
 })
 
 export const leadsService = {

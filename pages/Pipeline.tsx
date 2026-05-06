@@ -1,11 +1,12 @@
 
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Lead, LeadStatus, LeadProduct, LeadBusinessUnit, PRODUCT_BUSINESS_UNIT, PRODUCT_GROUPS } from '../types';
 import { useAppStore } from '../store/useAppStore';
 import { leadsService } from '../services/leadsService';
 import { eventsService } from '../services/eventsService';
 import { callLogsService } from '../services/callLogsService';
-import { Plus, Clock, X, Save, Loader2, Sparkles, Thermometer, Zap, Check, ChevronLeft, ChevronRight, Search } from 'lucide-react';
+import { Plus, Clock, X, Save, Loader2, Sparkles, Thermometer, Zap, Check, ChevronLeft, ChevronRight, Search, UserCheck } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
@@ -39,6 +40,7 @@ const DEFAULT_LEAD: Partial<Lead> = {
 };
 
 const Pipeline: React.FC = () => {
+  const navigate = useNavigate();
   const { leads, addLead, updateLead, addEvent, addCallLog } = useAppStore();
   const [activeView, setActiveView] = useState<PipelineView>('Todos');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -339,6 +341,14 @@ const Pipeline: React.FC = () => {
                           </div>
                           <span className="text-xs font-black text-slate-900">R$ {lead.value.toLocaleString('pt-BR')}</span>
                         </div>
+                        {lead.status === LeadStatus.WON && (
+                          <button
+                            onClick={() => navigate('/clients')}
+                            className="mt-3 w-full flex items-center justify-center gap-1.5 py-2 bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-2xl text-[10px] font-black hover:bg-emerald-100 transition-all"
+                          >
+                            <UserCheck size={12} /> Ver em Clientes Ativos
+                          </button>
+                        )}
                       </motion.div>
                     );
                   })}

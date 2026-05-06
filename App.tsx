@@ -17,6 +17,7 @@ import KnowledgeHub from './pages/KnowledgeHub';
 import ShopifyPage from './pages/Shopify';
 import VcChicPage from './pages/VcChicPage';
 import SezoPage from './pages/SezoPage';
+import Clients from './pages/Clients';
 import VoiceAssistant from './components/VoiceAssistant';
 import { useAppStore } from './store/useAppStore';
 import type { CallLog } from './types';
@@ -67,6 +68,7 @@ const AppContent: React.FC = () => {
                     <Route path="/" element={<Dashboard />} />
                     <Route path="/okrs" element={<Okrs />} />
                     <Route path="/pipeline" element={<Pipeline />} />
+                    <Route path="/clients" element={<Clients />} />
                     <Route path="/content" element={<ContentMachine />} />
                     <Route path="/knowledge" element={<KnowledgeHub />} />
                     <Route path="/calls" element={<Calls />} />

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Target, Users, Calendar, CheckSquare, BrainCircuit, PhoneCall, Megaphone, BookOpen, Command, Layout, LogOut, ShoppingBag, Store, ShoppingCart } from 'lucide-react';
+import { Target, Users, Calendar, CheckSquare, BrainCircuit, PhoneCall, Megaphone, BookOpen, Command, Layout, LogOut, ShoppingBag, Store, ShoppingCart, UserCheck } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { Avatar } from '@/components/ui/avatar';
 import { useAuth } from '@/components/auth/AuthProvider';
@@ -10,6 +10,7 @@ const menuItems = [
   { path: '/',          label: 'Cockpit CEO',        icon: <Layout size={20} /> },
   { path: '/okrs',      label: 'Estratégia & OKRs',  icon: <Target size={20} /> },
   { path: '/pipeline',  label: 'CRM & Vendas',        icon: <Users size={20} /> },
+  { path: '/clients',   label: 'Clientes Ativos',     icon: <UserCheck size={20} /> },
   { path: '/content',   label: 'Content Machine',     icon: <Megaphone size={20} /> },
   { path: '/knowledge', label: 'Knowledge Hub',       icon: <BookOpen size={20} /> },
   { path: '/calls',     label: 'Smart Calls',         icon: <PhoneCall size={20} /> },
@@ -51,13 +52,13 @@ const Sidebar: React.FC = () => {
       {/* Navigation */}
       <nav aria-label="Navegação principal" className="flex-1 px-4 space-y-1 overflow-y-auto custom-scrollbar">
         <p className="px-4 text-[9px] font-black text-slate-600 uppercase tracking-widest mb-3 mt-4">Command</p>
-        {menuItems.slice(0, 3).map((item) => renderMenuItem(item, isActive, navigate))}
+        {menuItems.slice(0, 4).map((item) => renderMenuItem(item, isActive, navigate))}
 
         <p className="px-4 text-[9px] font-black text-slate-600 uppercase tracking-widest mb-3 mt-8">Operations</p>
-        {menuItems.slice(3, 6).map((item) => renderMenuItem(item, isActive, navigate))}
+        {menuItems.slice(4, 7).map((item) => renderMenuItem(item, isActive, navigate))}
 
         <p className="px-4 text-[9px] font-black text-slate-600 uppercase tracking-widest mb-3 mt-8">Performance</p>
-        {menuItems.slice(6).map((item) => renderMenuItem(item, isActive, navigate))}
+        {menuItems.slice(7).map((item) => renderMenuItem(item, isActive, navigate))}
 
         <p className="px-4 text-[9px] font-black text-slate-600 uppercase tracking-widest mb-3 mt-8">E-Commerce</p>
         {storeItems.map((item) => renderMenuItem(item, isActive, navigate))}

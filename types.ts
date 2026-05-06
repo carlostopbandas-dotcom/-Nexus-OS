@@ -68,6 +68,8 @@ export enum LeadStatus {
   LOST = 'Perdido'
 }
 
+export type PaymentStatus = 'Em dia' | 'Pendente' | 'Inadimplente';
+
 export interface Lead {
   id: string;
   name: string;
@@ -83,6 +85,7 @@ export interface Lead {
   nextAction?: string;
   clientStage?: string;
   followUpDate?: string;
+  paymentStatus?: PaymentStatus;
   createdAt: string;
 }
 
