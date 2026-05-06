@@ -19,7 +19,7 @@ const menuItems = [
 ];
 
 const storeItems = [
-  { path: '/shopify', label: 'Grupo VcChic',  icon: <ShoppingBag size={20} /> },
+  { path: '/shopify', label: 'Moriel Store',   icon: <ShoppingBag size={20} /> },
   { path: '/vcchic',  label: 'VcChic Store',  icon: <Store size={20} /> },
   { path: '/sezo',    label: 'Sezo Store',    icon: <ShoppingCart size={20} /> },
 ];

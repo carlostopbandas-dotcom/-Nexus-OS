@@ -10,7 +10,7 @@ import {
   ArrowRight, Bell, Sparkles, ChevronRight, ShoppingBag, RefreshCw,
   DollarSign, Package
 } from 'lucide-react';
-import { LeadStatus, StoreMetric } from '../types';
+import { LeadStatus, StoreMetric, PRODUCT_BUSINESS_UNIT } from '../types';
 import { useAppStore } from '../store/useAppStore';
 import { toast } from 'sonner';
 
@@ -196,7 +196,7 @@ const Dashboard: React.FC = () => {
       .reduce((acc, o) => acc + parseFloat(o.total_price), 0);
 
     const digital3dYtd = leads
-      .filter(l => ['Nexus', 'Mapa da Clareza', 'Formação 3D'].includes(l.product) && l.status === LeadStatus.WON && l.createdAt?.startsWith(yearStr))
+      .filter(l => (l.businessUnit ?? PRODUCT_BUSINESS_UNIT[l.product]) === '3D Digital' && l.status === LeadStatus.WON && l.createdAt?.startsWith(yearStr))
       .reduce((acc, l) => acc + l.value, 0);
 
     return {
@@ -211,7 +211,7 @@ const Dashboard: React.FC = () => {
   const totalMtdSpend = (Object.values(performanceData) as StoreStats[]).reduce((acc: number, curr: StoreStats) => acc + curr.mtdSpend, 0);
   const globalMtdRoas = totalMtdSpend > 0 ? totalMtdSales / totalMtdSpend : 0;
 
-  const leads3D = leads.filter(l => ['Nexus', 'Mapa da Clareza', 'Formação 3D'].includes(l.product));
+  const leads3D = leads.filter(l => (l.businessUnit ?? PRODUCT_BUSINESS_UNIT[l.product]) === '3D Digital');
   const revenue3D = leads3D.filter(l => l.status === LeadStatus.WON).reduce((acc, curr) => acc + curr.value, 0);
   const pipeline3D = leads3D.reduce((acc, l) => acc + l.value, 0);
   const conversion3D = leads3D.length > 0

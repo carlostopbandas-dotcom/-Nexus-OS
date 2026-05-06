@@ -1,6 +1,52 @@
 
 export type BusinessUnit = '3D Digital' | 'Grupo VcChic' | 'VcChic' | 'Mivave' | 'Sezo' | 'Moriel' | 'Personal';
 
+export type LeadBusinessUnit = '3D Digital' | 'Grupo VcChic';
+
+export type LeadProduct =
+  // 3D Digital — B2B
+  | 'Negócio Sólido'
+  | 'NexIA — Cohort B2C'
+  | 'NexIA — Mentoria 1:1'
+  | 'NexIA — Programa Empresarial'
+  | 'NexIA — Retainer'
+  | 'Ecossistema de Negócios'
+  | 'Diagnóstico Gratuito'
+  // 3D Digital — B2C
+  | 'Nexus de Negócios'
+  // Grupo VcChic
+  | 'Motor 2';
+
+export const PRODUCT_BUSINESS_UNIT: Record<LeadProduct, LeadBusinessUnit> = {
+  'Negócio Sólido':              '3D Digital',
+  'NexIA — Cohort B2C':          '3D Digital',
+  'NexIA — Mentoria 1:1':        '3D Digital',
+  'NexIA — Programa Empresarial':'3D Digital',
+  'NexIA — Retainer':            '3D Digital',
+  'Ecossistema de Negócios':     '3D Digital',
+  'Diagnóstico Gratuito':        '3D Digital',
+  'Nexus de Negócios':           '3D Digital',
+  'Motor 2':                     'Grupo VcChic',
+};
+
+export const PRODUCT_GROUPS: { label: string; unit: LeadBusinessUnit; products: LeadProduct[] }[] = [
+  {
+    label: '3D Digital — B2B',
+    unit: '3D Digital',
+    products: ['Diagnóstico Gratuito', 'Negócio Sólido', 'NexIA — Cohort B2C', 'NexIA — Mentoria 1:1', 'NexIA — Programa Empresarial', 'NexIA — Retainer', 'Ecossistema de Negócios'],
+  },
+  {
+    label: '3D Digital — B2C',
+    unit: '3D Digital',
+    products: ['Nexus de Negócios'],
+  },
+  {
+    label: 'Grupo VcChic',
+    unit: 'Grupo VcChic',
+    products: ['Motor 2'],
+  },
+];
+
 export type UserRole = 'ceo' | 'gestor_vcchic' | 'vendedor_sdr' | 'assistente';
 
 export interface UserProfile {
@@ -30,7 +76,8 @@ export interface Lead {
   source: 'Organic' | 'Paid' | 'Indication' | 'Network';
   status: LeadStatus;
   value: number;
-  product: 'Nexus' | 'Mapa da Clareza' | 'Formação 3D' | 'Projeto Respirar' | 'Negócio Sólido';
+  product: LeadProduct;
+  businessUnit: LeadBusinessUnit;
   module?: 'M1' | 'M2' | 'M3' | 'M4' | 'M5' | 'Jornada Completa';
   painPoint?: string;
   nextAction?: string;
@@ -42,7 +89,7 @@ export interface Lead {
 export interface Metric {
   label: string;
   value: string | number;
-  change: number; // percentage
+  change: number;
   unit: string;
   target: number;
   status: 'good' | 'warning' | 'critical';
@@ -59,7 +106,7 @@ export interface OKR {
 export interface Task {
   id: string;
   title: string;
-  type: 'Big Rock' | 'Medium' | 'Small'; // 1-3-5 Rule
+  type: 'Big Rock' | 'Medium' | 'Small';
   completed: boolean;
   category: BusinessUnit;
 }
@@ -73,11 +120,11 @@ export interface ScheduleBlock {
 export interface CalendarEvent {
   id: string;
   title: string;
-  start: string; // ISO String or HH:mm if today
+  start: string;
   end: string;
   type: 'meeting' | 'deep_work' | 'personal' | 'call';
   attendees?: string[];
-  dayOffset: number; // 0 = today, 1 = tomorrow, etc. (for mocking)
+  dayOffset: number;
 }
 
 export interface CallLog {
@@ -88,9 +135,9 @@ export interface CallLog {
   type: 'Discovery' | 'Closing' | 'Mentorship' | 'Mapa da Clareza';
   status: 'Completed' | 'Missed' | 'Scheduled';
   sentiment: 'Positive' | 'Neutral' | 'Negative';
-  transcriptSnippet: string; // Mock transcript
+  transcriptSnippet: string;
   summary?: string;
-  recordingUrl?: string; // Mock
+  recordingUrl?: string;
 }
 
 export type Platform = 'linkedin' | 'instagram' | 'newsletter';
