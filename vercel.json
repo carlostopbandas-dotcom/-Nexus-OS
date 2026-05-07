@@ -5,5 +5,8 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "installCommand": "npm install",
-  "framework": "vite"
+  "framework": "vite",
+  "crons": [
+    { "path": "/api/ads/facebook-sync", "schedule": "0 * * * *" }
+  ]
 }
