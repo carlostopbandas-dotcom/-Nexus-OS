@@ -57,6 +57,10 @@ interface AppState {
   addCallLog: (log: CallLog) => void
   removeCallLog: (id: string) => void
   addStoreMetric: (metric: StoreMetric) => void
+
+  // AI Scores — session-only cache, not persisted
+  aiScores: Record<string, { score: number; suggestion: string }>
+  setLeadAIScore: (id: string, data: { score: number; suggestion: string }) => void
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -160,4 +164,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   removeCallLog: (id) => set((state) => ({ callLogs: state.callLogs.filter((c) => c.id !== id) })),
 
   addStoreMetric: (metric) => set((state) => ({ storeMetrics: [metric, ...state.storeMetrics] })),
+
+  aiScores: {},
+  setLeadAIScore: (id, data) => set((state) => ({ aiScores: { ...state.aiScores, [id]: data } })),
 }))

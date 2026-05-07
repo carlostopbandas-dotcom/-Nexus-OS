@@ -7,6 +7,7 @@ import { leadsService } from '../services/leadsService';
 import { eventsService } from '../services/eventsService';
 import { callLogsService } from '../services/callLogsService';
 import { Plus, Clock, X, Save, Loader2, Sparkles, Thermometer, Zap, Check, ChevronLeft, ChevronRight, Search, UserCheck } from 'lucide-react';
+import { useLeadAIScore } from '../hooks/useLeadAIScore';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
@@ -37,6 +38,41 @@ const DEFAULT_LEAD: Partial<Lead> = {
   source: 'Network', value: 0,
   status: LeadStatus.NEW,
   module: undefined, painPoint: '', nextAction: '',
+};
+
+const SCORE_BADGE: Record<'high' | 'mid' | 'low', string> = {
+  high: 'bg-emerald-100 text-emerald-700',
+  mid:  'bg-amber-100 text-amber-700',
+  low:  'bg-rose-100 text-rose-700',
+};
+
+const AIScoreBadge: React.FC<{ lead: Lead }> = ({ lead }) => {
+  const { score, suggestion, loading, analyze } = useLeadAIScore(lead);
+
+  if (score !== null) {
+    const tier = score >= 70 ? 'high' : score >= 40 ? 'mid' : 'low';
+    return (
+      <div className="mt-3 flex flex-col gap-1">
+        <span className={`self-start px-2 py-0.5 rounded-full text-[10px] font-black ${SCORE_BADGE[tier]}`}>
+          Score {score}
+        </span>
+        {suggestion && (
+          <p className="text-[9px] italic text-slate-400 leading-tight">{suggestion}</p>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <button
+      onClick={analyze}
+      disabled={loading}
+      className="mt-3 w-full flex items-center justify-center gap-1.5 py-2 bg-slate-50 text-slate-400 border border-slate-100 rounded-2xl text-[10px] font-black hover:bg-indigo-50 hover:text-indigo-500 hover:border-indigo-100 transition-all disabled:opacity-60"
+    >
+      {loading ? <Loader2 size={10} className="animate-spin" /> : <Sparkles size={10} />}
+      {loading ? 'Analisando...' : 'AI Score'}
+    </button>
+  );
 };
 
 const Pipeline: React.FC = () => {
@@ -349,6 +385,7 @@ const Pipeline: React.FC = () => {
                             <UserCheck size={12} /> Ver em Clientes Ativos
                           </button>
                         )}
+                        <AIScoreBadge lead={lead} />
                       </motion.div>
                     );
                   })}
