@@ -20,7 +20,7 @@ async function fetchRole(): Promise<UserRole | null> {
   const rolePromise = userProfilesService.getMyProfile()
     .then(({ data }) => data?.role ?? null)
     .catch(() => null)
-  const timeout = new Promise<null>(resolve => setTimeout(() => resolve(null), 8000))
+  const timeout = new Promise<null>(resolve => setTimeout(() => resolve(null), 10000))
   return Promise.race([rolePromise, timeout])
 }
 
@@ -31,27 +31,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [userRole, setUserRole] = useState<UserRole | null>(null)
   const [profileLoading, setProfileLoading] = useState(true)
 
+  // Sync-only: nunca fazer trabalho async aqui para evitar race condition com token expirado
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session)
       setUser(session?.user ?? null)
       setLoading(false)
-      if (session?.user) {
-        // TOKEN_REFRESHED não muda o role — evita rebote de loading
-        if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'USER_UPDATED') {
-          setProfileLoading(true)
-          const role = await fetchRole()
-          setUserRole(role)
-          setProfileLoading(false)
-        }
-      } else {
+      if (!session?.user) {
         setUserRole(null)
         setProfileLoading(false)
       }
     })
-
     return () => subscription.unsubscribe()
   }, [])
+
+  // Busca role separadamente, disparado apenas quando o ID do usuário muda
+  // (TOKEN_REFRESHED mantém o mesmo user.id — não re-executa)
+  useEffect(() => {
+    if (loading) return
+    if (!user) return
+
+    let cancelled = false
+    setProfileLoading(true)
+    fetchRole().then(role => {
+      if (!cancelled) {
+        setUserRole(role)
+        setProfileLoading(false)
+      }
+    })
+    return () => { cancelled = true }
+  }, [user?.id, loading])
 
   return (
     <AuthContext.Provider value={{ user, session, loading, userRole, profileLoading }}>
