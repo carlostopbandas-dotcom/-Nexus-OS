@@ -32,15 +32,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profileLoading, setProfileLoading] = useState(true)
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       setSession(session)
       setUser(session?.user ?? null)
-      setLoading(false)  // resolve imediatamente ao saber o estado da sessão
+      setLoading(false)
       if (session?.user) {
-        setProfileLoading(true)
-        const role = await fetchRole()  // nunca trava: timeout de 8s garante resolução
-        setUserRole(role)
-        setProfileLoading(false)
+        // TOKEN_REFRESHED não muda o role — evita rebote de loading
+        if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'USER_UPDATED') {
+          setProfileLoading(true)
+          const role = await fetchRole()
+          setUserRole(role)
+          setProfileLoading(false)
+        }
       } else {
         setUserRole(null)
         setProfileLoading(false)
