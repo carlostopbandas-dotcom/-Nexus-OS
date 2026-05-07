@@ -55,17 +55,21 @@ ALTER TABLE ads_campaigns_cache ENABLE ROW LEVEL SECURITY;
 ALTER TABLE ads_sync_log ENABLE ROW LEVEL SECURITY;
 
 -- CEO: acesso total
-CREATE POLICY IF NOT EXISTS "ceo_all_ads_cache" ON ads_campaigns_cache
+DROP POLICY IF EXISTS "ceo_all_ads_cache" ON ads_campaigns_cache;
+CREATE POLICY "ceo_all_ads_cache" ON ads_campaigns_cache
   FOR ALL USING (get_my_role() = 'ceo');
 
-CREATE POLICY IF NOT EXISTS "ceo_all_ads_sync_log" ON ads_sync_log
+DROP POLICY IF EXISTS "ceo_all_ads_sync_log" ON ads_sync_log;
+CREATE POLICY "ceo_all_ads_sync_log" ON ads_sync_log
   FOR ALL USING (get_my_role() = 'ceo');
 
 -- gestor_vcchic: somente leitura
-CREATE POLICY IF NOT EXISTS "gestor_vcchic_select_ads_cache" ON ads_campaigns_cache
+DROP POLICY IF EXISTS "gestor_vcchic_select_ads_cache" ON ads_campaigns_cache;
+CREATE POLICY "gestor_vcchic_select_ads_cache" ON ads_campaigns_cache
   FOR SELECT USING (get_my_role() = 'gestor_vcchic');
 
-CREATE POLICY IF NOT EXISTS "gestor_vcchic_select_ads_sync_log" ON ads_sync_log
+DROP POLICY IF EXISTS "gestor_vcchic_select_ads_sync_log" ON ads_sync_log;
+CREATE POLICY "gestor_vcchic_select_ads_sync_log" ON ads_sync_log
   FOR SELECT USING (get_my_role() = 'gestor_vcchic');
 
 -- ============================================================

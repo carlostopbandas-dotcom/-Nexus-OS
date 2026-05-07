@@ -24,12 +24,14 @@ CREATE INDEX IF NOT EXISTS idx_financial_entries_unit_date
 ALTER TABLE financial_entries ENABLE ROW LEVEL SECURITY;
 
 -- CEO: acesso total
+DROP POLICY IF EXISTS "ceo_all_financial_entries" ON financial_entries;
 CREATE POLICY "ceo_all_financial_entries" ON financial_entries
   FOR ALL
   USING (get_my_role() = 'ceo')
   WITH CHECK (get_my_role() = 'ceo');
 
 -- gestor_vcchic: apenas leitura nas unidades de loja (não acessa divisões 3D)
+DROP POLICY IF EXISTS "gestor_vcchic_select_financial_entries" ON financial_entries;
 CREATE POLICY "gestor_vcchic_select_financial_entries" ON financial_entries
   FOR SELECT
   USING (
