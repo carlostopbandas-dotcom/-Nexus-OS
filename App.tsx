@@ -18,6 +18,7 @@ import ShopifyPage from './pages/Shopify';
 import VcChicPage from './pages/VcChicPage';
 import SezoPage from './pages/SezoPage';
 import Clients from './pages/Clients';
+import Users from './pages/Users';
 import VoiceAssistant from './components/VoiceAssistant';
 import { useAppStore } from './store/useAppStore';
 import type { CallLog } from './types';
@@ -78,6 +79,7 @@ const AppContent: React.FC = () => {
                     <Route path="/shopify" element={<ShopifyPage />} />
                     <Route path="/vcchic" element={<VcChicPage />} />
                     <Route path="/sezo" element={<SezoPage />} />
+                    <Route path="/users" element={<Users />} />
                     <Route path="*" element={<Dashboard />} />
                   </Routes>
                 </motion.div>

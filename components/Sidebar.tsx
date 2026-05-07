@@ -5,34 +5,26 @@ import { Target, Users, Calendar, CheckSquare, BrainCircuit, PhoneCall, Megaphon
 import { supabase } from '@/lib/supabase';
 import { Avatar } from '@/components/ui/avatar';
 import { useAuth } from '@/components/auth/AuthProvider';
-
-const menuItems = [
-  { path: '/',          label: 'Cockpit CEO',        icon: <Layout size={20} /> },
-  { path: '/okrs',      label: 'Estratégia & OKRs',  icon: <Target size={20} /> },
-  { path: '/pipeline',  label: 'CRM & Vendas',        icon: <Users size={20} /> },
-  { path: '/clients',   label: 'Clientes Ativos',     icon: <UserCheck size={20} /> },
-  { path: '/content',   label: 'Content Machine',     icon: <Megaphone size={20} /> },
-  { path: '/knowledge', label: 'Knowledge Hub',       icon: <BookOpen size={20} /> },
-  { path: '/calls',     label: 'Smart Calls',         icon: <PhoneCall size={20} /> },
-  { path: '/routine',   label: 'Agenda & Rotina',     icon: <Calendar size={20} /> },
-  { path: '/tasks',     label: 'Sprint 1-3-5',        icon: <CheckSquare size={20} /> },
-  { path: '/ai',        label: 'IA Advisor',          icon: <BrainCircuit size={20} /> },
-];
-
-const storeItems = [
-  { path: '/shopify', label: 'Moriel Store',   icon: <ShoppingBag size={20} /> },
-  { path: '/vcchic',  label: 'VcChic Store',  icon: <Store size={20} /> },
-  { path: '/sezo',    label: 'Sezo Store',    icon: <ShoppingCart size={20} /> },
-];
+import { RoleGuard } from '@/components/auth/RoleGuard';
 
 const Sidebar: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAuth();
-  const displayName = user?.user_metadata?.full_name ?? user?.user_metadata?.name ?? user?.email?.split('@')[0] ?? 'CEO';
+  const { user, userRole } = useAuth();
+  const displayName = user?.user_metadata?.full_name ?? user?.user_metadata?.name ?? user?.email?.split('@')[0] ?? 'Usuário';
+
+  const roleLabel: Record<string, string> = {
+    ceo: 'CEO Founder',
+    gestor_vcchic: 'Gestor VcChic',
+    vendedor_sdr: 'Vendedor / SDR',
+    assistente: 'Assistente',
+  };
 
   const isActive = (path: string) =>
     path === '/' ? location.pathname === '/' : location.pathname.startsWith(path);
+
+  const item = (path: string, label: string, icon: React.ReactNode) =>
+    renderMenuItem({ path, label, icon }, isActive, navigate);
 
   return (
     <div className="w-72 bg-slate-900 h-screen fixed left-0 top-0 flex flex-col z-50 shadow-2xl border-r border-white/5">
@@ -51,17 +43,63 @@ const Sidebar: React.FC = () => {
 
       {/* Navigation */}
       <nav aria-label="Navegação principal" className="flex-1 px-4 space-y-1 overflow-y-auto custom-scrollbar">
-        <p className="px-4 text-[9px] font-black text-slate-600 uppercase tracking-widest mb-3 mt-4">Command</p>
-        {menuItems.slice(0, 4).map((item) => renderMenuItem(item, isActive, navigate))}
 
-        <p className="px-4 text-[9px] font-black text-slate-600 uppercase tracking-widest mb-3 mt-8">Operations</p>
-        {menuItems.slice(4, 7).map((item) => renderMenuItem(item, isActive, navigate))}
+        {/* Command — CEO only */}
+        <RoleGuard roles={['ceo']}>
+          <p className="px-4 text-[9px] font-black text-slate-600 uppercase tracking-widest mb-3 mt-4">Command</p>
+          {item('/', 'Cockpit CEO', <Layout size={20} />)}
+          {item('/okrs', 'Estratégia & OKRs', <Target size={20} />)}
+          {item('/pipeline', 'CRM & Vendas', <Users size={20} />)}
+          {item('/clients', 'Clientes Ativos', <UserCheck size={20} />)}
+        </RoleGuard>
 
-        <p className="px-4 text-[9px] font-black text-slate-600 uppercase tracking-widest mb-3 mt-8">Performance</p>
-        {menuItems.slice(7).map((item) => renderMenuItem(item, isActive, navigate))}
+        {/* OKRs — gestor_vcchic vê somente esta seção de strategy */}
+        <RoleGuard roles={['gestor_vcchic']}>
+          <p className="px-4 text-[9px] font-black text-slate-600 uppercase tracking-widest mb-3 mt-4">Estratégia</p>
+          {item('/okrs', 'OKRs VcChic', <Target size={20} />)}
+        </RoleGuard>
 
-        <p className="px-4 text-[9px] font-black text-slate-600 uppercase tracking-widest mb-3 mt-8">E-Commerce</p>
-        {storeItems.map((item) => renderMenuItem(item, isActive, navigate))}
+        {/* CRM — vendedor_sdr e assistente */}
+        <RoleGuard roles={['vendedor_sdr', 'assistente']}>
+          <p className="px-4 text-[9px] font-black text-slate-600 uppercase tracking-widest mb-3 mt-4">CRM</p>
+          {item('/pipeline', 'CRM & Vendas', <Users size={20} />)}
+          {item('/clients', 'Clientes Ativos', <UserCheck size={20} />)}
+        </RoleGuard>
+
+        {/* Operations */}
+        <RoleGuard roles={['ceo', 'vendedor_sdr']}>
+          <p className="px-4 text-[9px] font-black text-slate-600 uppercase tracking-widest mb-3 mt-8">Operations</p>
+          <RoleGuard roles={['ceo']}>
+            {item('/content', 'Content Machine', <Megaphone size={20} />)}
+            {item('/knowledge', 'Knowledge Hub', <BookOpen size={20} />)}
+          </RoleGuard>
+          {item('/calls', 'Smart Calls', <PhoneCall size={20} />)}
+        </RoleGuard>
+
+        {/* Performance */}
+        <RoleGuard roles={['ceo', 'assistente']}>
+          <p className="px-4 text-[9px] font-black text-slate-600 uppercase tracking-widest mb-3 mt-8">Performance</p>
+          {item('/routine', 'Agenda & Rotina', <Calendar size={20} />)}
+          {item('/tasks', 'Sprint 1-3-5', <CheckSquare size={20} />)}
+          <RoleGuard roles={['ceo']}>
+            {item('/ai', 'IA Advisor', <BrainCircuit size={20} />)}
+          </RoleGuard>
+        </RoleGuard>
+
+        {/* E-Commerce — CEO e gestor_vcchic */}
+        <RoleGuard roles={['ceo', 'gestor_vcchic']}>
+          <p className="px-4 text-[9px] font-black text-slate-600 uppercase tracking-widest mb-3 mt-8">E-Commerce</p>
+          {item('/shopify', 'Moriel Store', <ShoppingBag size={20} />)}
+          {item('/vcchic', 'VcChic Store', <Store size={20} />)}
+          {item('/sezo', 'Sezo Store', <ShoppingCart size={20} />)}
+        </RoleGuard>
+
+        {/* Admin — CEO only */}
+        <RoleGuard roles={['ceo']}>
+          <p className="px-4 text-[9px] font-black text-slate-600 uppercase tracking-widest mb-3 mt-8">Admin</p>
+          {item('/users', 'Usuários', <Users size={20} />)}
+        </RoleGuard>
+
       </nav>
 
       {/* Footer Area */}
@@ -71,7 +109,9 @@ const Sidebar: React.FC = () => {
             <Avatar size="lg" />
             <div className="flex-1 min-w-0">
               <p className="text-xs font-black text-white truncate">{displayName}</p>
-              <p className="text-[9px] text-slate-500 font-bold uppercase tracking-tight">CEO Founder</p>
+              <p className="text-[9px] text-slate-500 font-bold uppercase tracking-tight">
+                {roleLabel[userRole ?? ''] ?? 'Usuário'}
+              </p>
             </div>
             <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"></div>
           </div>
