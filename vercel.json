@@ -7,6 +7,6 @@
   "installCommand": "npm install",
   "framework": "vite",
   "crons": [
-    { "path": "/api/ads/facebook-sync", "schedule": "0 * * * *" }
+    { "path": "/api/ads/facebook-sync", "schedule": "0 0 * * *" }
   ]
 }
