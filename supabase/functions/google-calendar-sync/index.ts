@@ -32,7 +32,7 @@ async function getAccessToken(): Promise<string> {
     }),
   })
   const data = await res.json()
-  if (!data.access_token) throw new Error('Falha ao obter access_token do Google')
+  if (!data.access_token) throw new Error(`Falha ao obter access_token: ${data.error ?? 'unknown'} — ${data.error_description ?? JSON.stringify(data)}`)
   return data.access_token
 }
 
@@ -72,17 +72,45 @@ serve(async (req) => {
     const accessToken = await getAccessToken()
 
     // ── Import: Google → Nexus ──────────────────────────────────────────────
-    const now = new Date().toISOString()
+    // timeMin = início do dia em UTC (= 21h BRT de ontem), captura todos os eventos de hoje
+    const startOfToday = new Date()
+    startOfToday.setUTCHours(0, 0, 0, 0)
+    const timeMin = startOfToday.toISOString()
     const timeMax = new Date(Date.now() + 90 * 86400000).toISOString()
 
-    const calRes = await fetch(
-      `https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${now}&timeMax=${timeMax}&maxResults=250&singleEvents=true&orderBy=startTime`,
+    // Busca lista de todos os calendários do usuário
+    const calListRes = await fetch(
+      'https://www.googleapis.com/calendar/v3/users/me/calendarList',
       { headers: { Authorization: `Bearer ${accessToken}` } }
     )
-    const calData = await calRes.json()
+    const calListData = await calListRes.json()
+    const calendarIds: string[] = (calListData.items ?? []).map(
+      (cal: Record<string, unknown>) => cal.id as string
+    )
 
-    if (calData.items?.length) {
-      const eventsToUpsert = calData.items.map((e: Record<string, unknown>) => {
+    // Busca eventos de todos os calendários e mescla
+    const allItems: Record<string, unknown>[] = []
+    for (const calId of calendarIds) {
+      const calRes = await fetch(
+        `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calId)}/events?timeMin=${encodeURIComponent(timeMin)}&timeMax=${encodeURIComponent(timeMax)}&maxResults=250&singleEvents=true&orderBy=startTime`,
+        { headers: { Authorization: `Bearer ${accessToken}` } }
+      )
+      const calData = await calRes.json()
+      if (calData.items?.length) {
+        allItems.push(...calData.items)
+      }
+    }
+
+    // Deduplica por google_event_id (um evento pode aparecer em múltiplos calendários)
+    const seen = new Set<string>()
+    const eventsToUpsert = allItems
+      .filter(e => {
+        const id = e.id as string
+        if (seen.has(id)) return false
+        seen.add(id)
+        return true
+      })
+      .map(e => {
         const start = e.start as Record<string, string>
         const end = e.end as Record<string, string> | undefined
         return {
@@ -94,6 +122,7 @@ serve(async (req) => {
         }
       })
 
+    if (eventsToUpsert.length) {
       const { error: upsertError } = await supabase
         .from('events')
         .upsert(eventsToUpsert, { onConflict: 'google_event_id' })
@@ -107,7 +136,7 @@ serve(async (req) => {
       .from('events')
       .select('id, title, start_time, end_time')
       .is('google_event_id', null)
-      .gte('start_time', now)
+      .gte('start_time', new Date().toISOString())
 
     if (localErr) throw new Error(`Erro ao ler eventos locais: ${localErr.message}`)
 
