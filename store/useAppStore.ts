@@ -66,6 +66,10 @@ interface AppState {
   pipelineSummary: { opportunities: string[]; risks: string[]; focus: string } | null
   setPipelineSummary: (data: { opportunities: string[]; risks: string[]; focus: string }) => void
   clearPipelineSummary: () => void
+
+  // Client Follow-up Alerts — session-only cache, not persisted
+  clientAlerts: Record<string, { urgency: 'alta' | 'media' | 'baixa'; suggestion: string }>
+  setClientAlert: (id: string, data: { urgency: 'alta' | 'media' | 'baixa'; suggestion: string }) => void
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -176,4 +180,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   pipelineSummary: null,
   setPipelineSummary: (data) => set({ pipelineSummary: data }),
   clearPipelineSummary: () => set({ pipelineSummary: null }),
+
+  clientAlerts: {},
+  setClientAlert: (id, data) => set((state) => ({ clientAlerts: { ...state.clientAlerts, [id]: data } })),
 }))

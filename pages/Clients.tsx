@@ -5,8 +5,10 @@ import { leadsService } from '@/services/leadsService';
 import { LeadStatus, PRODUCT_BUSINESS_UNIT, type Lead, type PaymentStatus, type LeadBusinessUnit } from '@/types';
 import {
   Users, Search, ArrowRight, Phone, CheckCircle2,
-  AlertCircle, XCircle, BookOpen, TrendingUp, DollarSign, ChevronDown
+  AlertCircle, XCircle, BookOpen, TrendingUp, DollarSign, ChevronDown,
+  Sparkles, Loader2, Copy
 } from 'lucide-react';
+import { useClientFollowUpAlert } from '../hooks/useClientFollowUpAlert';
 import { toast } from 'sonner';
 
 type ClientView = 'Todos' | '3D Digital' | 'Grupo VcChic';
@@ -29,6 +31,69 @@ const UNIT_BORDER: Record<LeadBusinessUnit, string> = {
 };
 
 const VIEWS: ClientView[] = ['Todos', '3D Digital', 'Grupo VcChic'];
+
+const URGENCY_CONFIG = {
+  alta:  { bg: 'bg-rose-50',   text: 'text-rose-700',   badge: 'text-rose-600'   },
+  media: { bg: 'bg-amber-50',  text: 'text-amber-700',  badge: 'text-amber-600'  },
+  baixa: { bg: 'bg-slate-50',  text: 'text-slate-600',  badge: 'text-slate-500'  },
+} as const;
+
+const AIFollowUpAlert: React.FC<{ client: import('@/types').Lead }> = ({ client }) => {
+  const { daysWithoutFollowUp, needsAlert, alert, loading, analyze } = useClientFollowUpAlert(client);
+
+  if (!needsAlert) return null;
+
+  const copyToClipboard = async () => {
+    if (!alert) return;
+    try {
+      await navigator.clipboard.writeText(alert.suggestion);
+      import('sonner').then(({ toast }) => toast.success('Mensagem copiada!'));
+    } catch {
+      import('sonner').then(({ toast }) => toast.error('Não foi possível copiar.'));
+    }
+  };
+
+  const urgencyCfg = alert ? URGENCY_CONFIG[alert.urgency] : null;
+
+  return (
+    <div className="mt-3 pt-3 border-t border-slate-50">
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-[10px] font-black text-amber-600 uppercase tracking-widest flex items-center gap-1">
+          <AlertCircle size={11} />
+          {daysWithoutFollowUp !== null
+            ? `Sem follow-up há ${daysWithoutFollowUp}d`
+            : 'Sem follow-up registrado'}
+        </span>
+        {!alert && (
+          <button
+            onClick={analyze}
+            disabled={loading}
+            title="Gerar sugestão de mensagem WhatsApp com IA"
+            className="flex items-center gap-1 text-[10px] font-black text-indigo-500 hover:text-indigo-700 disabled:opacity-50 transition-colors"
+          >
+            {loading
+              ? <Loader2 size={11} className="animate-spin" />
+              : <Sparkles size={11} />}
+            Sugestão IA
+          </button>
+        )}
+      </div>
+
+      {alert && urgencyCfg && (
+        <div className={`mt-2 p-3 rounded-xl ${urgencyCfg.bg}`}>
+          <p className={`text-[11px] leading-relaxed ${urgencyCfg.text}`}>{alert.suggestion}</p>
+          <button
+            onClick={copyToClipboard}
+            title="Copiar mensagem para área de transferência"
+            className="mt-2 flex items-center gap-1 text-[10px] font-bold text-slate-400 hover:text-slate-700 transition-colors"
+          >
+            <Copy size={11} /> Copiar mensagem
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const Clients: React.FC = () => {
   const navigate = useNavigate();
@@ -282,6 +347,9 @@ const ClientCard: React.FC<{
           )}
         </div>
       </div>
+
+      {/* AI Follow-up Alert — Story 3.3 */}
+      <AIFollowUpAlert client={client} />
     </div>
   );
 };
