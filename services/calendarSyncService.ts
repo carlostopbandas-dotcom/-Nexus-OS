@@ -41,7 +41,8 @@ export const calendarSyncService = {
     if (!session) return { data: null, error: 'Sessão inválida' }
 
     try {
-      const response = await fetch('/api/calendar/google-sync', {
+      const fnUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/google-calendar-sync`
+      const response = await fetch(fnUrl, {
         method: 'POST',
         headers: { Authorization: `Bearer ${session.access_token}` },
       })
