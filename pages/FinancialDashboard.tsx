@@ -4,6 +4,7 @@ import { RoleGuard } from '@/components/auth/RoleGuard'
 import { useAuth } from '@/components/auth/AuthProvider'
 import { financialService, type StoreFinancials, type GroupSummary } from '@/services/financialService'
 import FinancialEntriesPanel from '@/components/financial/FinancialEntriesPanel'
+import CampaignsProfitabilityPanel from '@/components/ads/CampaignsProfitabilityPanel'
 
 // ── Period helpers ─────────────────────────────────────────────────────────
 
@@ -239,6 +240,15 @@ const FinancialDashboardContent: React.FC = () => {
 
       {/* Lançamentos Financeiros */}
       <FinancialEntriesPanel
+        businessUnit={selectedStore}
+        period={getPeriodDates(selectedPeriod)}
+      />
+
+      {/* Divider */}
+      <hr className="border-slate-100" />
+
+      {/* Campanhas · Lucratividade */}
+      <CampaignsProfitabilityPanel
         businessUnit={selectedStore}
         period={getPeriodDates(selectedPeriod)}
       />
