@@ -61,6 +61,11 @@ interface AppState {
   // AI Scores — session-only cache, not persisted
   aiScores: Record<string, { score: number; suggestion: string }>
   setLeadAIScore: (id: string, data: { score: number; suggestion: string }) => void
+
+  // Pipeline Summary — session-only cache, not persisted
+  pipelineSummary: { opportunities: string[]; risks: string[]; focus: string } | null
+  setPipelineSummary: (data: { opportunities: string[]; risks: string[]; focus: string }) => void
+  clearPipelineSummary: () => void
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -167,4 +172,8 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   aiScores: {},
   setLeadAIScore: (id, data) => set((state) => ({ aiScores: { ...state.aiScores, [id]: data } })),
+
+  pipelineSummary: null,
+  setPipelineSummary: (data) => set({ pipelineSummary: data }),
+  clearPipelineSummary: () => set({ pipelineSummary: null }),
 }))

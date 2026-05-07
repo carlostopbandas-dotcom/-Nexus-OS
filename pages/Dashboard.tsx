@@ -11,7 +11,9 @@ import {
   DollarSign, Package
 } from 'lucide-react';
 import { LeadStatus, StoreMetric, PRODUCT_BUSINESS_UNIT } from '../types';
+import type { Lead } from '../types';
 import { useAppStore } from '../store/useAppStore';
+import { usePipelineSummary } from '../hooks/usePipelineSummary';
 import { toast } from 'sonner';
 
 type MainUnit = 'Overview' | '3D Digital' | 'Grupo VcChic';
@@ -39,6 +41,74 @@ const getGreeting = () => {
 
 const fmt = (v: number) =>
   v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+const AIPipelineSummary: React.FC<{ leads: Lead[] }> = ({ leads }) => {
+  const { summary, loading, generate, refresh } = usePipelineSummary(leads);
+
+  return (
+    <div className="bg-white rounded-[2rem] border border-slate-100 shadow-xl p-6">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-[0.2em] flex items-center gap-2">
+          <Sparkles size={14} className="text-indigo-500" /> AI Pipeline Summary
+        </h3>
+        {summary && !loading && (
+          <button
+            onClick={refresh}
+            className="p-1.5 rounded-xl text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 transition-all"
+            title="Regerar resumo"
+          >
+            <RefreshCw size={13} />
+          </button>
+        )}
+      </div>
+
+      {loading && (
+        <div className="flex flex-col items-center justify-center py-8 gap-3">
+          <Loader2 size={24} className="text-indigo-500 animate-spin" />
+          <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Analisando pipeline...</p>
+        </div>
+      )}
+
+      {!loading && !summary && (
+        <button
+          onClick={generate}
+          className="w-full py-5 border-2 border-dashed border-slate-200 rounded-2xl flex items-center justify-center gap-2 text-[11px] font-black text-slate-400 uppercase tracking-widest hover:border-indigo-300 hover:text-indigo-500 hover:bg-indigo-50 transition-all"
+        >
+          <Sparkles size={14} /> Gerar Resumo com IA
+        </button>
+      )}
+
+      {!loading && summary && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="border-l-4 border-emerald-400 pl-4">
+            <p className="text-[9px] font-black text-emerald-600 uppercase tracking-widest mb-2">Oportunidades</p>
+            <ul className="space-y-1.5">
+              {summary.opportunities.map((o, i) => (
+                <li key={i} className="text-[11px] text-slate-600 flex items-start gap-2">
+                  <span className="text-emerald-500 mt-0.5 shrink-0">•</span>{o}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="border-l-4 border-rose-400 pl-4">
+            <p className="text-[9px] font-black text-rose-600 uppercase tracking-widest mb-2">Em Risco</p>
+            <ul className="space-y-1.5">
+              {summary.risks.map((r, i) => (
+                <li key={i} className="text-[11px] text-slate-600 flex items-start gap-2">
+                  <span className="text-rose-500 mt-0.5 shrink-0">•</span>{r}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="bg-indigo-50 rounded-2xl p-4">
+            <p className="text-[9px] font-black text-indigo-600 uppercase tracking-widest mb-2">Foco do CEO</p>
+            <p className="text-[12px] font-bold text-indigo-900 leading-relaxed">{summary.focus}</p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -338,6 +408,9 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* ── AI Pipeline Summary (Story 3.2) ────────────────────────────────── */}
+      <AIPipelineSummary leads={leads} />
 
       {/* ── Painéis condicionais ───────────────────────────────────────────── */}
       <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
