@@ -3,15 +3,42 @@ import type { CalendarEvent } from '@/types'
 
 type ServiceResult<T> = { data: T | null; error: string | null }
 
-const mapEvent = (e: Record<string, unknown>): CalendarEvent => ({
-  id: e.id as string,
-  title: e.title as string,
-  start: e.start_time as string,
-  end: e.end_time as string,
-  type: e.type as CalendarEvent['type'],
-  attendees: e.attendees as string[] | undefined,
-  dayOffset: e.day_offset as number,
-})
+const mapEvent = (e: Record<string, unknown>): CalendarEvent => {
+  const startRaw = (e.start_time as string) ?? ''
+  let start: string
+  let dayOffset: number
+
+  if (startRaw.includes('T')) {
+    // ISO datetime do Google Calendar (ex: '2026-05-07T10:00:00-03:00')
+    const dt = new Date(startRaw)
+    start = dt.toLocaleTimeString('pt-BR', {
+      hour: '2-digit', minute: '2-digit', hour12: false,
+      timeZone: 'America/Sao_Paulo',
+    })
+    const todayBR = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' })
+    const eventDayBR = dt.toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' })
+    dayOffset = Math.round((new Date(eventDayBR).getTime() - new Date(todayBR).getTime()) / 86400000)
+  } else if (/^\d{4}-\d{2}-\d{2}$/.test(startRaw)) {
+    // Evento dia-todo do Google Calendar (ex: '2026-05-10')
+    start = 'allday'
+    const todayBR = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' })
+    dayOffset = Math.round((new Date(startRaw).getTime() - new Date(todayBR).getTime()) / 86400000)
+  } else {
+    // Formato legado HH:mm (eventos criados manualmente no Nexus)
+    start = startRaw
+    dayOffset = (e.day_offset as number) ?? 0
+  }
+
+  return {
+    id: e.id as string,
+    title: e.title as string,
+    start,
+    end: e.end_time as string,
+    type: e.type as CalendarEvent['type'],
+    attendees: e.attendees as string[] | undefined,
+    dayOffset,
+  }
+}
 
 export const eventsService = {
   async getAll(): Promise<ServiceResult<CalendarEvent[]>> {

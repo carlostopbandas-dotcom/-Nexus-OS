@@ -211,7 +211,9 @@ const Routine: React.FC = () => {
                                             <p className="text-sm font-black text-slate-900">{ev.title}</p>
                                             <div className="flex items-center gap-2 mt-1">
                                                 <Clock size={12} className="text-slate-300" />
-                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{ev.start}</p>
+                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                                    {ev.start === 'allday' ? 'Dia todo' : ev.start}
+                                                </p>
                                             </div>
                                         </div>
                                     </div>
@@ -286,7 +288,7 @@ const Routine: React.FC = () => {
                                                     <div>
                                                         <h4 className="font-black text-slate-900 text-sm">{ev.title}</h4>
                                                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1 flex items-center gap-1.5">
-                                                            <Clock size={12} /> Início: {ev.start}
+                                                            <Clock size={12} /> {ev.start === 'allday' ? 'Dia todo' : `Início: ${ev.start}`}
                                                         </p>
                                                     </div>
                                                 </div>
