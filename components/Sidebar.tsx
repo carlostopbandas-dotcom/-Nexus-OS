@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Target, Users, Calendar, CheckSquare, BrainCircuit, PhoneCall, Megaphone, BookOpen, Command, Layout, LogOut, ShoppingBag, Store, ShoppingCart, UserCheck, TrendingUp } from 'lucide-react';
+import { Target, Users, Calendar, CheckSquare, BrainCircuit, PhoneCall, Megaphone, BookOpen, Command, Layout, LogOut, ShoppingBag, Store, ShoppingCart, UserCheck, TrendingUp, Building2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { Avatar } from '@/components/ui/avatar';
 import { useAuth } from '@/components/auth/AuthProvider';
@@ -98,6 +98,9 @@ const Sidebar: React.FC = () => {
         <RoleGuard roles={['ceo', 'gestor_vcchic']}>
           <p className="px-4 text-[9px] font-black text-slate-600 uppercase tracking-widest mb-3 mt-8">Financeiro</p>
           {item('/financeiro', 'Dashboard', <TrendingUp size={20} />)}
+        </RoleGuard>
+        <RoleGuard roles={['ceo']}>
+          {item('/financeiro-3d', '3D Digital', <Building2 size={20} />)}
         </RoleGuard>
 
         {/* Admin — CEO only */}

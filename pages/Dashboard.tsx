@@ -15,6 +15,7 @@ import type { Lead } from '../types';
 import { useAppStore } from '../store/useAppStore';
 import { usePipelineSummary } from '../hooks/usePipelineSummary';
 import { toast } from 'sonner';
+import OnboardingBanner from '@/components/auth/OnboardingBanner';
 
 type MainUnit = 'Overview' | '3D Digital' | 'Grupo VcChic';
 
@@ -324,6 +325,7 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="space-y-8 pb-20 animate-in fade-in duration-700">
+      <OnboardingBanner />
       {/* Header — saudação dinâmica */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
         <div className="space-y-1">

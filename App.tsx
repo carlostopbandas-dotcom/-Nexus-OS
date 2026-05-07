@@ -20,6 +20,7 @@ import SezoPage from './pages/SezoPage';
 import Clients from './pages/Clients';
 import Users from './pages/Users';
 import FinancialDashboard from './pages/FinancialDashboard';
+import Digital3DFinancials from './pages/Digital3DFinancials';
 import VoiceAssistant from './components/VoiceAssistant';
 import { useAppStore } from './store/useAppStore';
 import type { CallLog } from './types';
@@ -82,6 +83,7 @@ const AppContent: React.FC = () => {
                     <Route path="/sezo" element={<SezoPage />} />
                     <Route path="/users" element={<Users />} />
                     <Route path="/financeiro" element={<FinancialDashboard />} />
+                    <Route path="/financeiro-3d" element={<Digital3DFinancials />} />
                     <Route path="*" element={<Dashboard />} />
                   </Routes>
                 </motion.div>
