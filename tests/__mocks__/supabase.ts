@@ -28,6 +28,7 @@ export const createMockBuilder = (response: MockResponse) => {
     eq: vi.fn().mockReturnThis(),
     is: vi.fn().mockReturnThis(),
     gte: vi.fn().mockReturnThis(),
+    lte: vi.fn().mockReturnThis(),
     order: vi.fn().mockReturnThis(),
     single: vi.fn().mockReturnThis(),
     then(
