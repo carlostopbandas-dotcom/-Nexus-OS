@@ -7,10 +7,13 @@ import { Clock, User, Phone, Megaphone, Sparkles, Calendar as CalendarIcon, Zap,
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppStore } from '../store/useAppStore';
 import { toast } from 'sonner';
+import { useAuth } from '@/components/auth/AuthProvider';
+import CalendarSyncPanel from '@/components/calendar/CalendarSyncPanel';
 
 type BlockStatus = 'past' | 'current' | 'future';
 
 const Routine: React.FC = () => {
+  const { userRole } = useAuth();
   const { events, setEvents, removeEvent, tasks } = useAppStore();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [viewMode, setViewMode] = useState<'real' | 'ideal'>('real');
@@ -154,6 +157,7 @@ const Routine: React.FC = () => {
 
   return (
     <div className="h-full flex flex-col space-y-6">
+      {userRole === 'ceo' && <CalendarSyncPanel />}
       <div className="flex justify-between items-end">
         <div>
           <h2 className="text-3xl font-black text-slate-900 tracking-tighter uppercase italic">NEXUS CALENDAR</h2>

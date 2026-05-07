@@ -2,7 +2,7 @@ import { vi } from 'vitest'
 
 export type MockResponse = {
   data: unknown
-  error: { message: string } | null
+  error: { message: string; code?: string } | null
 }
 
 /**
@@ -30,6 +30,7 @@ export const createMockBuilder = (response: MockResponse) => {
     gte: vi.fn().mockReturnThis(),
     lte: vi.fn().mockReturnThis(),
     order: vi.fn().mockReturnThis(),
+    limit: vi.fn().mockReturnThis(),
     single: vi.fn().mockReturnThis(),
     then(
       onFulfilled: ((value: MockResponse) => unknown) | null | undefined,
