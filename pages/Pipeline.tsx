@@ -285,12 +285,12 @@ const Pipeline: React.FC = () => {
       </div>
 
       {/* Kanban */}
-      <div className="overflow-x-auto min-h-0" style={{ height: 'calc(100vh - 310px)' }}>
-        <div className="flex gap-6 min-w-[1200px] h-full pb-2">
+      <div className="min-h-0 md:overflow-x-auto" style={{ height: 'auto' }}>
+        <div className="flex flex-col md:flex-row gap-6 md:min-w-[1200px] pb-2">
           {kanbanColumns.map(col => {
             const items = viewLeads.filter(l => l.status === col.id);
             return (
-              <div key={col.id} className="flex-1 bg-white/40 border border-slate-100 rounded-[2.5rem] flex flex-col p-4 shadow-sm min-w-[260px] min-h-0">
+              <div key={col.id} className="flex-1 bg-white/40 border border-slate-100 rounded-[2.5rem] flex flex-col p-4 shadow-sm md:min-w-[260px] min-h-0">
                 <div className="p-4 mb-2 flex justify-between items-center flex-shrink-0">
                   <h3 className={`font-black text-[10px] uppercase tracking-[0.2em] ${col.text}`}>{col.title}</h3>
                   <div className="flex items-center gap-2">

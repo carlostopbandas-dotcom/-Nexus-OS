@@ -314,12 +314,12 @@ Utilize este conhecimento para otimizar processos na VcChic ou na Escola 3D, bus
                             <UploadCloud size={20} />
                         </button>
 
-                        <button 
+                        <button
                             onClick={handleCustomStudy}
-                            className="bg-white text-indigo-600 px-6 py-2.5 rounded-lg font-bold hover:bg-indigo-50 transition-all flex items-center gap-2 shadow-lg hover:shadow-xl hover:scale-105 transform duration-200 whitespace-nowrap"
+                            className="bg-white text-indigo-600 px-3 sm:px-6 py-2.5 rounded-lg font-bold hover:bg-indigo-50 transition-all flex items-center gap-2 shadow-lg hover:shadow-xl hover:scale-105 transform duration-200 whitespace-nowrap"
                         >
                             <BrainCircuit size={16} />
-                            {attachment ? 'Analisar Doc' : 'Gerar Aula'}
+                            <span className="hidden sm:inline">{attachment ? 'Analisar Doc' : 'Gerar Aula'}</span>
                         </button>
                     </div>
                 </div>

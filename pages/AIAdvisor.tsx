@@ -375,16 +375,16 @@ const AIAdvisor: React.FC = () => {
         )}
 
         {/* Action Toolbar: Prompts Left, Upload Right */}
-        <div className="flex items-center justify-between mb-3 gap-4">
-            <div className="flex gap-2 overflow-x-auto pb-2 hide-scrollbar flex-1 mask-linear-fade">
+        <div className="flex items-start justify-between mb-3 gap-2">
+            <div className="flex flex-wrap gap-2 flex-1">
                 {quickPrompts.map(qp => (
                     <button
                         key={qp.id}
                         onClick={() => handleSend(qp.query)}
                         disabled={loading}
                         className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-colors whitespace-nowrap border ${
-                            qp.id === 'trends' 
-                            ? 'bg-rose-50 text-rose-600 border-rose-100 hover:bg-rose-100' 
+                            qp.id === 'trends'
+                            ? 'bg-rose-50 text-rose-600 border-rose-100 hover:bg-rose-100'
                             : 'bg-indigo-50 text-indigo-700 border-indigo-100 hover:bg-indigo-100'
                         }`}
                     >
@@ -405,11 +405,11 @@ const AIAdvisor: React.FC = () => {
             />
             <button
                 onClick={() => fileInputRef.current?.click()}
-                className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white pl-3 pr-4 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm transform hover:-translate-y-0.5 whitespace-nowrap"
+                className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white p-1.5 sm:pl-3 sm:pr-4 rounded-lg text-xs font-bold transition-all shadow-sm transform hover:-translate-y-0.5 flex-shrink-0"
                 title="Anexar Documento para Análise"
             >
                 <UploadCloud size={14} />
-                Carregar Doc
+                <span className="hidden sm:inline">Carregar Doc</span>
             </button>
         </div>
 

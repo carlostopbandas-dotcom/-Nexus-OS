@@ -149,14 +149,14 @@ const Clients: React.FC = () => {
         </div>
         <button
           onClick={() => navigate('/pipeline')}
-          className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-2xl text-xs font-bold hover:bg-indigo-700 transition-all"
+          className="hidden sm:flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-2xl text-xs font-bold hover:bg-indigo-700 transition-all"
         >
           Ver Pipeline <ArrowRight size={14} />
         </button>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-2 md:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 md:gap-4">
         {[
           { label: 'Clientes Ativos', value: activeClients.length, icon: <Users size={20} className="text-indigo-500" />, sub: 'total convertidos' },
           { label: 'Receita Total', value: fmt(totalRevenue), icon: <DollarSign size={20} className="text-emerald-500" />, sub: 'contratos fechados' },
@@ -174,13 +174,13 @@ const Clients: React.FC = () => {
       </div>
 
       {/* Tabs + Search */}
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex gap-1 bg-white rounded-2xl p-1 border border-slate-100 shadow-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="flex gap-1 bg-white rounded-2xl p-1 border border-slate-100 shadow-sm overflow-x-auto">
           {VIEWS.map(v => (
             <button
               key={v}
               onClick={() => setActiveView(v)}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+              className={`flex-shrink-0 px-3 sm:px-4 py-2 rounded-xl text-xs font-bold transition-all ${
                 activeView === v
                   ? 'bg-indigo-600 text-white shadow'
                   : 'text-slate-500 hover:text-slate-800'
@@ -201,7 +201,7 @@ const Clients: React.FC = () => {
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Buscar cliente..."
-            className="pl-9 pr-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 w-56"
+            className="pl-9 pr-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 w-full sm:w-56"
           />
         </div>
       </div>

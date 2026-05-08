@@ -270,7 +270,7 @@ const Tasks: React.FC = () => {
           )}
       </AnimatePresence>
 
-      <div className="flex justify-between items-end">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-3">
         <div>
           <h2 className="text-3xl font-black text-slate-900 tracking-tight italic">STRATEGIC SPRINT</h2>
           <div className="flex items-center gap-4 mt-2">
@@ -292,10 +292,10 @@ const Tasks: React.FC = () => {
         <button
             onClick={handleRebalance}
             disabled={isReorganizing}
-            className="group flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-slate-200 text-slate-500 hover:text-blue-600 hover:border-blue-200 transition-all font-bold text-xs disabled:opacity-50"
+            className="group flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-slate-200 text-slate-500 hover:text-blue-600 hover:border-blue-200 transition-all font-bold text-xs disabled:opacity-50 self-start sm:self-auto"
         >
             {isReorganizing ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} className="group-hover:animate-pulse" />}
-            {isReorganizing ? 'Rebalanceando...' : 'IA Balancear Slots'}
+            <span>{isReorganizing ? 'Rebalanceando...' : 'IA Balancear Slots'}</span>
         </button>
       </div>
 
@@ -314,10 +314,10 @@ const Tasks: React.FC = () => {
                     aria-label="Nova tarefa"
                     className="flex-1 h-14 bg-transparent outline-none text-lg font-bold text-slate-800 placeholder-slate-300"
                   />
-                  <button 
+                  <button
                     onClick={() => handleSmartAdd()}
                     disabled={!newTaskInput.trim()}
-                    className="bg-slate-900 text-white px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-blue-600 transition-all disabled:opacity-20"
+                    className="bg-slate-900 text-white px-4 sm:px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-blue-600 transition-all disabled:opacity-20"
                   >
                       Add
                   </button>
