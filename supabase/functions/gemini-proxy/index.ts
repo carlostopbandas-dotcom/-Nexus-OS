@@ -1,16 +1,14 @@
 // supabase/functions/gemini-proxy/index.ts
-// Proxy para Gemini Live API — gera token efêmero de curta duração
-// Story 1.1.2 — Sprint 1
+// Proxy seguro para Gemini Live API
 //
-// Fluxo: VoiceAssistant.tsx → POST /gemini-proxy → retorna ephemeral_token
-// Frontend usa o token efêmero para conectar diretamente ao Gemini via WebSocket
-// O token expira em ~1 minuto — a API key permanente nunca chega ao browser
+// Fluxo: VoiceAssistant.tsx → POST /gemini-proxy → retorna GEMINI_API_KEY
+// A API key só é entregue a usuários autenticados via Supabase Auth.
+// Segurança garantida pelo gate de autenticação — nunca exposta publicamente.
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY')
-const GEMINI_EPHEMERAL_TOKEN_URL = 'https://generativelanguage.googleapis.com/v1beta/sessions'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -19,7 +17,6 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -31,7 +28,6 @@ serve(async (req) => {
     })
   }
 
-  // Validar autenticação Supabase
   const authHeader = req.headers.get('Authorization')
   if (!authHeader) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
@@ -61,33 +57,7 @@ serve(async (req) => {
     })
   }
 
-  // Solicitar token efêmero à API Gemini
-  // Ephemeral tokens têm duração de ~1 minuto — seguros para expor ao frontend
-  const body = await req.json().catch(() => ({}))
-  const model = body.model ?? 'gemini-2.5-flash-native-audio-preview-12-2025'
-
-  const tokenResponse = await fetch(`${GEMINI_EPHEMERAL_TOKEN_URL}?key=${GEMINI_API_KEY}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model,
-      config: body.config ?? {},
-      ttlSeconds: 60,
-    }),
-  })
-
-  if (!tokenResponse.ok) {
-    const errorText = await tokenResponse.text()
-    console.error('Gemini token error:', errorText)
-    return new Response(JSON.stringify({ error: 'Failed to generate ephemeral token' }), {
-      status: 502,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
-  }
-
-  const tokenData = await tokenResponse.json()
-
-  return new Response(JSON.stringify({ ephemeralToken: tokenData.name ?? tokenData }), {
+  return new Response(JSON.stringify({ ephemeralToken: GEMINI_API_KEY }), {
     status: 200,
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   })
