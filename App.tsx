@@ -70,7 +70,7 @@ const AppContent: React.FC = () => {
 
         <div className="absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-[#F0F4F8] to-transparent z-20 pointer-events-none hidden md:block"></div>
 
-        <div className="flex-1 overflow-y-auto custom-scrollbar md:p-8 p-4 pt-4">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar md:p-8 p-4 pt-4">
           <div className="max-w-[1440px] mx-auto min-h-full pb-20">
             {loading ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

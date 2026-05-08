@@ -170,14 +170,14 @@ const Routine: React.FC = () => {
       </div>
 
       <div className="bg-white rounded-[2.5rem] shadow-2xl border border-slate-100 flex-1 flex flex-col overflow-hidden">
-        <div className="flex items-center justify-between p-6 border-b border-slate-50 bg-slate-50/30">
-            <div className="flex items-center gap-3">
+        <div className="flex flex-col gap-3 p-4 md:p-6 border-b border-slate-50 bg-slate-50/30">
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 hide-scrollbar">
                 {weekDays.map((day, idx) => {
                     const isSelected = selectedDate.getDate() === day.getDate() && selectedDate.getMonth() === day.getMonth();
                     const isToday = new Date().getDate() === day.getDate();
                     return (
                         <button key={idx} onClick={() => setSelectedDate(day)}
-                            className={`flex flex-col items-center min-w-[65px] p-3 rounded-2xl transition-all ${
+                            className={`flex flex-col items-center flex-shrink-0 min-w-[56px] p-2.5 rounded-2xl transition-all ${
                                 isSelected ? 'bg-slate-900 text-white shadow-xl scale-105' : 'bg-white text-slate-400 border border-slate-100 hover:border-slate-300'
                             }`}
                         >
@@ -188,8 +188,8 @@ const Routine: React.FC = () => {
                     );
                 })}
             </div>
-            <div className="text-right">
-                <p className="text-lg font-black text-slate-900 tracking-tight capitalize">{selectedDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}</p>
+            <div className="md:text-right">
+                <p className="text-sm font-black text-slate-900 tracking-tight capitalize">{selectedDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}</p>
             </div>
         </div>
 

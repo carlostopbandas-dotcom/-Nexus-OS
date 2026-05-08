@@ -224,14 +224,14 @@ const Pipeline: React.FC = () => {
           <h2 className="text-4xl font-black text-slate-900 tracking-tighter uppercase italic">CRM <span className="text-blue-600">INTEL</span></h2>
           <p className="text-slate-400 font-bold text-xs uppercase tracking-tight">Gestão Térmica de Oportunidades</p>
         </div>
-        <div className="flex flex-wrap items-center gap-4">
-          {/* View tabs — espelha Dashboard */}
+        <div className="flex flex-wrap items-center gap-3">
+          {/* View tabs */}
           <div className="flex bg-white shadow-xl shadow-slate-200/50 p-1.5 rounded-[1.5rem] border border-slate-100">
             {(['Todos', '3D Digital', 'Grupo VcChic'] as PipelineView[]).map(view => (
               <button
                 key={view}
                 onClick={() => setActiveView(view)}
-                className={`px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${
+                className={`px-3 md:px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${
                   activeView === view ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-900'
                 }`}
               >
@@ -240,8 +240,8 @@ const Pipeline: React.FC = () => {
             ))}
           </div>
 
-          {/* Stats */}
-          <div className="bg-white px-6 py-3 rounded-2xl border border-slate-100 shadow-xl shadow-slate-200/50 flex items-center gap-6">
+          {/* Stats — oculto no mobile */}
+          <div className="hidden md:flex bg-white px-6 py-3 rounded-2xl border border-slate-100 shadow-xl shadow-slate-200/50 items-center gap-6">
             <div className="flex flex-col">
               <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Pipe Ativo</span>
               <span className="text-sm font-black text-slate-900">R$ {totalPipe.toLocaleString('pt-BR')}</span>
@@ -260,9 +260,9 @@ const Pipeline: React.FC = () => {
 
           <button
             onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-3 bg-slate-900 text-white px-8 py-4 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest hover:bg-blue-600 transition-all shadow-2xl shadow-blue-500/20"
+            className="flex items-center gap-2 bg-slate-900 text-white px-5 md:px-8 py-4 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest hover:bg-blue-600 transition-all shadow-2xl shadow-blue-500/20"
           >
-            <Plus size={16} /> Novo Lead
+            <Plus size={16} /> <span className="hidden md:inline">Novo Lead</span>
           </button>
         </div>
       </div>

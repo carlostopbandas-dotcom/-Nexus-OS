@@ -156,19 +156,19 @@ const Clients: React.FC = () => {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-3 gap-2 md:gap-4">
         {[
           { label: 'Clientes Ativos', value: activeClients.length, icon: <Users size={20} className="text-indigo-500" />, sub: 'total convertidos' },
           { label: 'Receita Total', value: fmt(totalRevenue), icon: <DollarSign size={20} className="text-emerald-500" />, sub: 'contratos fechados' },
-          { label: 'Em Inadimplência', value: activeClients.filter(l => l.paymentStatus === 'Inadimplente').length, icon: <TrendingUp size={20} className="text-red-500" />, sub: 'requerem atenção' },
+          { label: 'Inadimplentes', value: activeClients.filter(l => l.paymentStatus === 'Inadimplente').length, icon: <TrendingUp size={20} className="text-red-500" />, sub: 'requerem atenção' },
         ].map(s => (
-          <div key={s.label} className="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">{s.label}</span>
-              {s.icon}
+          <div key={s.label} className="bg-white rounded-2xl md:rounded-3xl p-3 md:p-5 border border-slate-100 shadow-sm">
+            <div className="flex items-center justify-between mb-2 md:mb-3">
+              <span className="text-[9px] md:text-xs font-bold text-slate-500 uppercase tracking-tight leading-tight">{s.label}</span>
+              <span className="hidden sm:block">{s.icon}</span>
             </div>
-            <p className="text-2xl font-black text-slate-900">{s.value}</p>
-            <p className="text-xs text-slate-400 mt-1">{s.sub}</p>
+            <p className="text-xl md:text-2xl font-black text-slate-900 truncate">{s.value}</p>
+            <p className="text-[10px] md:text-xs text-slate-400 mt-1 hidden sm:block">{s.sub}</p>
           </div>
         ))}
       </div>
