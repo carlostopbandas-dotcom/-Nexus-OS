@@ -7,7 +7,12 @@ import { Avatar } from '@/components/ui/avatar';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { RoleGuard } from '@/components/auth/RoleGuard';
 
-const Sidebar: React.FC = () => {
+interface SidebarProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, userRole } = useAuth();
@@ -24,10 +29,20 @@ const Sidebar: React.FC = () => {
     path === '/' ? location.pathname === '/' : location.pathname.startsWith(path);
 
   const item = (path: string, label: string, icon: React.ReactNode) =>
-    renderMenuItem({ path, label, icon }, isActive, navigate);
+    renderMenuItem({ path, label, icon }, isActive, navigate, onClose);
 
   return (
-    <div className="w-72 bg-slate-900 h-screen fixed left-0 top-0 flex flex-col z-50 shadow-2xl border-r border-white/5">
+    <>
+      {/* Mobile backdrop */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={onClose}
+          aria-hidden="true"
+        />
+      )}
+
+    <div className={`w-72 bg-slate-900 h-screen fixed left-0 top-0 flex flex-col z-50 shadow-2xl border-r border-white/5 transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}>
       {/* Brand Header */}
       <div className="px-8 py-10">
         <div className="flex items-center gap-3 text-white mb-1">
@@ -134,19 +149,21 @@ const Sidebar: React.FC = () => {
         </button>
       </div>
     </div>
+    </>
   );
 };
 
 const renderMenuItem = (
   item: { path: string; label: string; icon: React.ReactNode },
   isActive: (path: string) => boolean,
-  navigate: (path: string) => void
+  navigate: (path: string) => void,
+  onClose?: () => void
 ) => {
   const active = isActive(item.path);
   return (
     <button
       key={item.path}
-      onClick={() => navigate(item.path)}
+      onClick={() => { navigate(item.path); onClose?.(); }}
       className={`relative group w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all duration-500 ${
         active
           ? 'bg-blue-600 text-white shadow-2xl shadow-blue-500/40 translate-x-1'
