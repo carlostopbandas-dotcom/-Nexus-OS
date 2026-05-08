@@ -74,17 +74,17 @@ const CalendarSyncPanel: React.FC = () => {
 
   return (
     <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="w-8 h-8 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600 flex-shrink-0">
             <Calendar size={14} />
           </div>
-          <div>
+          <div className="min-w-0">
             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
               Google Calendar
             </p>
             {lastSync ? (
-              <div className="flex items-center gap-2 mt-0.5">
+              <div className="flex flex-wrap items-center gap-2 mt-0.5">
                 {STATUS_CONFIG[lastSync.status].icon}
                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${STATUS_CONFIG[lastSync.status].badge}`}>
                   {STATUS_CONFIG[lastSync.status].label}
@@ -110,7 +110,7 @@ const CalendarSyncPanel: React.FC = () => {
         <button
           onClick={handleSync}
           disabled={syncing}
-          className="flex items-center gap-2 px-3 py-1.5 text-xs font-bold text-slate-600 border border-slate-200 rounded-xl hover:border-blue-300 hover:text-blue-600 disabled:opacity-50 transition-all"
+          className="flex items-center gap-2 px-3 py-1.5 text-xs font-bold text-slate-600 border border-slate-200 rounded-xl hover:border-blue-300 hover:text-blue-600 disabled:opacity-50 transition-all self-start sm:self-auto flex-shrink-0"
         >
           <RefreshCw size={12} className={syncing ? 'animate-spin' : ''} />
           {syncing ? 'Sincronizando...' : 'Sincronizar agora'}

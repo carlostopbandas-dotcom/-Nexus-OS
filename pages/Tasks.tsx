@@ -270,54 +270,53 @@ const Tasks: React.FC = () => {
           )}
       </AnimatePresence>
 
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-3">
-        <div>
+      <div className="flex flex-col gap-3">
+        <div className="flex items-start justify-between gap-2">
           <h2 className="text-3xl font-black text-slate-900 tracking-tight italic">STRATEGIC SPRINT</h2>
-          <div className="flex items-center gap-4 mt-2">
-             <div className="flex items-center gap-1.5">
-                 <div className={`w-2 h-2 rounded-full ${BigRocks.length >= 1 ? 'bg-red-500' : 'bg-slate-300'}`}></div>
-                 <span className="text-[10px] font-black text-slate-500 uppercase">Big Rock {BigRocks.length}/1</span>
-             </div>
-             <div className="flex items-center gap-1.5">
-                 <div className={`w-2 h-2 rounded-full ${Mediums.length >= 3 ? 'bg-amber-500' : 'bg-slate-300'}`}></div>
-                 <span className="text-[10px] font-black text-slate-500 uppercase">Medium {Mediums.length}/3</span>
-             </div>
-             <div className="flex items-center gap-1.5">
-                 <div className={`w-2 h-2 rounded-full ${Smalls.length >= 5 ? 'bg-blue-500' : 'bg-slate-300'}`}></div>
-                 <span className="text-[10px] font-black text-slate-500 uppercase">Small {Smalls.length}/5</span>
-             </div>
-          </div>
+          <button
+              onClick={handleRebalance}
+              disabled={isReorganizing}
+              className="group flex items-center gap-1.5 bg-white px-3 py-2 rounded-xl border border-slate-200 text-slate-500 hover:text-blue-600 hover:border-blue-200 transition-all font-bold text-xs disabled:opacity-50 flex-shrink-0"
+          >
+              {isReorganizing ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} className="group-hover:animate-pulse" />}
+              <span className="hidden sm:inline">{isReorganizing ? 'Rebalanceando...' : 'IA Balancear Slots'}</span>
+          </button>
         </div>
-        
-        <button
-            onClick={handleRebalance}
-            disabled={isReorganizing}
-            className="group flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-slate-200 text-slate-500 hover:text-blue-600 hover:border-blue-200 transition-all font-bold text-xs disabled:opacity-50 self-start sm:self-auto"
-        >
-            {isReorganizing ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} className="group-hover:animate-pulse" />}
-            <span>{isReorganizing ? 'Rebalanceando...' : 'IA Balancear Slots'}</span>
-        </button>
+        <div className="flex items-center gap-3">
+           <div className="flex items-center gap-1.5">
+               <div className={`w-2 h-2 rounded-full ${BigRocks.length >= 1 ? 'bg-red-500' : 'bg-slate-300'}`}></div>
+               <span className="text-[10px] font-black text-slate-500 uppercase">Big Rock {BigRocks.length}/1</span>
+           </div>
+           <div className="flex items-center gap-1.5">
+               <div className={`w-2 h-2 rounded-full ${Mediums.length >= 3 ? 'bg-amber-500' : 'bg-slate-300'}`}></div>
+               <span className="text-[10px] font-black text-slate-500 uppercase">Medium {Mediums.length}/3</span>
+           </div>
+           <div className="flex items-center gap-1.5">
+               <div className={`w-2 h-2 rounded-full ${Smalls.length >= 5 ? 'bg-blue-500' : 'bg-slate-300'}`}></div>
+               <span className="text-[10px] font-black text-slate-500 uppercase">Small {Smalls.length}/5</span>
+           </div>
+        </div>
       </div>
 
       <div className="space-y-4 max-w-4xl mx-auto w-full">
           <div className={`relative bg-white p-2 rounded-[2rem] shadow-2xl border-2 transition-all ${isClassifying ? 'border-blue-500 ring-4 ring-blue-50' : 'border-slate-100 focus-within:border-blue-500 focus-within:shadow-blue-500/10'}`}>
-              <div className="flex items-center gap-4 px-4">
-                  <div className="p-3 bg-slate-900 text-white rounded-2xl shadow-lg">
-                      {isClassifying ? <Loader2 size={24} className="animate-spin" /> : <Plus size={24} />}
+              <div className="flex items-center gap-2 md:gap-4 px-2 md:px-4">
+                  <div className="p-2 md:p-3 bg-slate-900 text-white rounded-2xl shadow-lg flex-shrink-0">
+                      {isClassifying ? <Loader2 size={20} className="animate-spin" /> : <Plus size={20} />}
                   </div>
                   <input
                     type="text"
                     value={newTaskInput}
                     onChange={(e) => setNewTaskInput(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSmartAdd()}
-                    placeholder="O que o CEO precisa resolver agora? (A IA prioriza p/ você)"
+                    placeholder="O que o CEO precisa resolver agora?"
                     aria-label="Nova tarefa"
-                    className="flex-1 h-14 bg-transparent outline-none text-lg font-bold text-slate-800 placeholder-slate-300"
+                    className="flex-1 min-w-0 h-14 bg-transparent outline-none text-sm md:text-lg font-bold text-slate-800 placeholder-slate-300"
                   />
                   <button
                     onClick={() => handleSmartAdd()}
                     disabled={!newTaskInput.trim()}
-                    className="bg-slate-900 text-white px-4 sm:px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-blue-600 transition-all disabled:opacity-20"
+                    className="bg-slate-900 text-white px-3 md:px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-blue-600 transition-all disabled:opacity-20 flex-shrink-0"
                   >
                       Add
                   </button>

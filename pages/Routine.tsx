@@ -158,14 +158,14 @@ const Routine: React.FC = () => {
   return (
     <div className="h-full flex flex-col space-y-6">
       {userRole === 'ceo' && <CalendarSyncPanel />}
-      <div className="flex justify-between items-end">
+      <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-end">
         <div>
           <h2 className="text-3xl font-black text-slate-900 tracking-tighter uppercase italic">NEXUS CALENDAR</h2>
           <p className="text-slate-500 font-medium">Controle de Operações: Agenda Integrada</p>
         </div>
-        <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 shadow-inner">
-            <button onClick={() => setViewMode('real')} className={`px-4 py-2 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${viewMode === 'real' ? 'bg-white shadow-md text-blue-600' : 'text-slate-400'}`}>Agenda Integrada</button>
-            <button onClick={() => setViewMode('ideal')} className={`px-4 py-2 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${viewMode === 'ideal' ? 'bg-white shadow-md text-blue-600' : 'text-slate-400'}`}>Blueprint</button>
+        <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 shadow-inner self-start sm:self-auto">
+            <button onClick={() => setViewMode('real')} className={`px-3 sm:px-4 py-2 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${viewMode === 'real' ? 'bg-white shadow-md text-blue-600' : 'text-slate-400'}`}>Agenda Integrada</button>
+            <button onClick={() => setViewMode('ideal')} className={`px-3 sm:px-4 py-2 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${viewMode === 'ideal' ? 'bg-white shadow-md text-blue-600' : 'text-slate-400'}`}>Blueprint</button>
         </div>
       </div>
 
